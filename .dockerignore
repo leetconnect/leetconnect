@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+*.md
+ft_transcendence.pdf
+.DS_Store

@@ -1,0 +1,32 @@
+{
+  "name": "leetconnect",
+  "version": "1.0.0",
+  "description": "**Freelancing platform.**",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "frontend"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:clean": "docker compose down -v --rmi all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leetconnect/leetconnect.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/leetconnect/leetconnect/issues"
+  },
+  "homepage": "https://github.com/leetconnect/leetconnect#readme",
+  "dependencies": {
+    "lucide-react": "^0.575.0"
+  }
+}

@@ -1,0 +1,163 @@
+services:
+  nginx:
+    container_name: nginx
+    restart: unless-stopped
+    build: ./nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - auth
+      - marketplace
+      - chat
+      - analytics
+      - admin
+      - frontend
+    networks:
+      - leetconnect
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
+    networks:
+      - leetconnect
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+  auth:
+    container_name: auth
+    # image_name: auth
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=${REDIS_URL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+  marketplace:
+    container_name: marketplace
+    # image_name: marketplace
+    build:
+      context: .
+      dockerfile: services/marketplace/Dockerfile
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${MARKET_DB_USER}:${MARKET_DB_PASS}@postgres:5432/${MARKET_DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SERVICE_URL=http://auth:3001
+  chat:
+    container_name: chat
+    # image_name: chat
+    build:
+      context: .
+      dockerfile: services/chat/Dockerfile
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASS}@postgres:5432/${CHAT_DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SERVICE_URL=http://auth:3001
+  analytics:
+    container_name: analytics
+    # image_name: analytics
+    build:
+      context: .
+      dockerfile: services/analytics/Dockerfile
+    restart: unless-stopped
+    networks:
+      - leetconnect 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASS}@postgres:5432/${ANALYTICS_DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SERVICE_URL=http://auth:3001
+  admin:
+    container_name: admin
+    # image_name: admin
+    build:
+      context: .
+      dockerfile: services/admin/Dockerfile
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    depends_on:
+      - auth
+      - marketplace
+      - analytics
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - AUTH_SERVICE_URL=http://auth:3001
+      - MARKETPLACE_SERVICE_URL=http://marketplace:3002
+      - ANALYTICS_SERVICE_URL=http://analytics:3004
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - leetconnect
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+networks:
+  leetconnect:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

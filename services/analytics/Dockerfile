@@ -1,0 +1,8 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY packages/shared/ ./shared/
+COPY services/analytics/package.json ./
+RUN npm install --production
+COPY services/analytics/src/ ./src/
+EXPOSE 3004
+CMD ["node", "src/index.js"]

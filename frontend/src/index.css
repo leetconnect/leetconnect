@@ -1,0 +1,232 @@
+/**
+ * index.css — Global styles and design system tokens
+ * Source of truth: DESIGN_SYSTEM_DARK.md (Linear-inspired dark theme)
+ * All color tokens, typography, and base styles are defined here.
+ * Owner: Member 5 (shared infrastructure)
+ *
+ * THEMES:
+ *   Default   → Dark Mode  (:root)
+ *   Secondary → Light Mode (.light class on <html>)
+ */
+
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@800&display=swap');
+
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
+
+/* ──────────────────────────────────────────────────
+   Design System Tokens — Tailwind @theme mapping
+   ────────────────────────────────────────────────── */
+
+@theme inline {
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: calc(var(--radius) + 8px);
+    --radius-3xl: calc(var(--radius) + 12px);
+    --radius-4xl: calc(var(--radius) + 16px);
+
+    /* Core surfaces */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--foreground);
+    --color-popover: var(--card);
+    --color-popover-foreground: var(--foreground);
+
+    /* Brand — LeetConnect Green */
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    /* Neutral variants */
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    /* Functional */
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Chart colors */
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /* Sidebar */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ══════════════════════════════════════════════════
+   DEFAULT THEME: Dark Mode  (:root)
+   Linear-inspired dark palette — applied by default
+   ══════════════════════════════════════════════════ */
+
+:root {
+    color-scheme: dark;
+
+    /* ── Core Surfaces ── */
+    --background: #0A0A0B;
+    --background-elevated: #121214;
+    --foreground: #EDEDEF;
+    --foreground-muted: #8A8F98;
+    --border: #26262A;
+    --border-hover: #3A3A40;
+    --card: #17171A;
+    --input: #1D1D21;
+
+    /* ── Shadcn / Tailwind Semantic Tokens ── */
+    --primary: rgb(120, 200, 100);
+    /* LeetConnect brand green */
+    --primary-foreground: #000000;
+    /* Black text on green */
+
+    --secondary: #1D1D21;
+    /* Elevated dark surface */
+    --secondary-foreground: #EDEDEF;
+    /* Light text */
+
+    --muted: #1D1D21;
+    /* Subtle fills */
+    --muted-foreground: #8A8F98;
+    /* Subdued / helper text */
+
+    --accent: #26262A;
+    /* Hover / focus backgrounds */
+    --accent-foreground: #EDEDEF;
+
+    --destructive: #E54D2E;
+    /* Error / delete actions */
+    --ring: rgb(120, 200, 100);
+    /* Focus ring = brand green */
+
+    /* ── Chart Colors ── */
+    --chart-1: rgb(120, 200, 100);
+    /* green  */
+    --chart-2: #3B82F6;
+    /* blue   */
+    --chart-3: #F59E0B;
+    /* amber  */
+    --chart-4: #8B5CF6;
+    /* purple */
+    --chart-5: #EF4444;
+    /* red    */
+
+    /* ── Sidebar ── */
+    --sidebar: #0A0A0B;
+    --sidebar-foreground: #EDEDEF;
+    --sidebar-primary: rgb(120, 200, 100);
+    --sidebar-primary-foreground: #000000;
+    --sidebar-accent: #121214;
+    --sidebar-accent-foreground: #EDEDEF;
+    --sidebar-border: #26262A;
+    --sidebar-ring: rgb(120, 200, 100);
+}
+
+/* ══════════════════════════════════════════════════
+   SECONDARY THEME: Light Mode  (.light on <html>)
+   Clean white palette — same token names, new values
+   ══════════════════════════════════════════════════ */
+
+.light {
+    color-scheme: light;
+
+    /* ── Core Surfaces ── */
+    --background: #FFFFFF;
+    --background-elevated: #F5F5F5;
+    --foreground: #0A0A0B;
+    --foreground-muted: #6B7280;
+    --border: #E5E7EB;
+    --border-hover: #D1D5DB;
+    --card: #F9FAFB;
+    --input: #F3F4F6;
+
+    /* ── Shadcn / Tailwind Semantic Tokens ── */
+    --primary: rgb(80, 170, 60);
+    /* Deeper green — readable on white */
+    --primary-foreground: #FFFFFF;
+    /* White text on green */
+
+    --secondary: #F3F4F6;
+    /* Light gray surface */
+    --secondary-foreground: #111827;
+    /* Dark text */
+
+    --muted: #F3F4F6;
+    /* Subtle fills */
+    --muted-foreground: #6B7280;
+    /* Subdued / helper text */
+
+    --accent: #F0FDF4;
+    /* Soft green-tinted hover bg */
+    --accent-foreground: #14532D;
+    /* Deep green text */
+
+    --destructive: #DC2626;
+    /* Error / delete actions */
+    --ring: rgb(80, 170, 60);
+    /* Focus ring */
+
+    /* ── Chart Colors (light-mode variants) ── */
+    --chart-1: rgb(80, 170, 60);
+    /* green  */
+    --chart-2: #2563EB;
+    /* blue   */
+    --chart-3: #D97706;
+    /* amber  */
+    --chart-4: #7C3AED;
+    /* purple */
+    --chart-5: #DC2626;
+    /* red    */
+
+    /* ── Sidebar ── */
+    --sidebar: #F9FAFB;
+    --sidebar-foreground: #111827;
+    --sidebar-primary: rgb(80, 170, 60);
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F0FDF4;
+    --sidebar-accent-foreground: #14532D;
+    --sidebar-border: #E5E7EB;
+    --sidebar-ring: rgb(80, 170, 60);
+}
+
+/* ── Base Styles ── */
+
+@layer base {
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        letter-spacing: -0.025em;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+}

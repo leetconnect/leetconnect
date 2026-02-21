@@ -1,4 +1,46 @@
-DESIGN_SYSTEM.md
-DESIGN_SYSTEM_DARK.md
 microservices_architecture.md
 ft_transcendence.pdf
+
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing and coverage
+coverage/
+
+# production builds
+dist/
+build/
+.next/
+out/
+.vercel/
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env
+.env
+.env.*
+*.local
+
+# caches
+.eslintcache
+.stylelintcache
+.npm/
+.yarn/
+
+# editors
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
