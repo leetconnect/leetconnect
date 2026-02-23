@@ -8,7 +8,7 @@ import Messages from './pages/chat/Messages';
 import Admin from './pages/admin/Admin';
 import Layout from './components/Layout';
 // import Theme from './components/ThemeShowcase';
-// import Navbar from './components/Navbar';
+import Navbar from './components/Navbar';
 
 export default function App() {
   return (
