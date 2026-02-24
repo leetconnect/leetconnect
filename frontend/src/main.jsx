@@ -6,6 +6,7 @@ import './index.css';
 import Landing from './pages/Landing.jsx';
 import { Theme } from './components/Theme';
 import { Intro } from './components/Intro';
+import {Features } from './components/Features';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Theme>
         <App />
         <Intro/>
+        <Features/>
       </Theme>
     </BrowserRouter>
   </React.StrictMode>,
