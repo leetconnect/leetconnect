@@ -7,6 +7,7 @@ import Landing from './pages/Landing.jsx';
 import { Theme } from './components/Theme';
 import { Intro } from './components/Intro';
 import {Features } from './components/Features';
+import {Howitwork } from './components/Howitwork';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <App />
         <Intro/>
         <Features/>
+        <Howitwork/>
       </Theme>
     </BrowserRouter>
   </React.StrictMode>,
