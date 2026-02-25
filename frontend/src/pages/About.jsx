@@ -13,7 +13,7 @@ import developer2Img from '../assets/ner-roui.jpg';
 export default function About() {
   return (
     <div className="min-h-screen flex flex-col pt-16">
-      <Navbar />
+      <Navbar/>
 
       <main className="flex-grow">
         <motion.section
@@ -29,14 +29,12 @@ export default function About() {
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8">
               LeetConnect is the premium platform designed to bridge the gap between world-class freelancers and forward-thinking clients. We believe in seamless collaboration, high-quality work, and a system that works for everyone.
             </p>
-                 <motion.div
-                        initial={{opacity: 0, scale: 0.9}}
-                        animate={{opacity: 1, scale: 1}}
-                        transition={{duration: 0.5, delay: 0.1}}
-                        className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-accent text-sm">
-                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Now accepting new freelancers
-                    </motion.div>
+
+            <motion.div className="inline-flex items-center gap-2 px-4 py-2 mb-12 rounded-full bg-accent/30 border border-border/50 text-sm font-medium text-muted-foreground backdrop-blur-sm">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
+              Based on the <span className="text-foreground font-semibold">ft_transcendence</span> project at 42
+            </motion.div>
+
           </div>
         </motion.section>
 
