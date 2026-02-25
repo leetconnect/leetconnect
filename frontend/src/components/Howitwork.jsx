@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import stepImage from "../assets/wp9365202.jpeg";
+import stepImage from "../assets/wp9365202.jpg";
 
 export function StepItem({ number, title, description, image, index = 0}){
     const ref = useRef(null);
