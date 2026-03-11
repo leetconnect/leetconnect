@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { TeamMemberCard } from '../components/TeamMemberCard';
@@ -14,7 +14,6 @@ export default function About() {
   return (
     <div className="min-h-screen flex flex-col pt-16">
       <Navbar/>
-
       <main className="flex-grow">
         <motion.section
           initial={{opacity: 0, y: 20}}
@@ -30,10 +29,10 @@ export default function About() {
               LeetConnect is the premium platform designed to bridge the gap between world-class freelancers and forward-thinking clients. We believe in seamless collaboration, high-quality work, and a system that works for everyone.
             </p>
 
-            <motion.div className="inline-flex items-center gap-2 px-4 py-2 mb-12 rounded-full bg-accent/30 border border-border/50 text-sm font-medium text-muted-foreground backdrop-blur-sm">
+            {/* <motion.div className="inline-flex items-center gap-2 px-4 py-2 mb-12 rounded-full bg-accent/30 border border-border/50 text-sm font-medium text-muted-foreground backdrop-blur-sm">
               <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
               Based on the <span className="text-foreground font-semibold">ft_transcendence</span> project at 42
-            </motion.div>
+            </motion.div> */}
 
           </div>
         </motion.section>
@@ -114,10 +113,10 @@ export default function About() {
           </div>
           <div className="flex flex-wrap justify-center gap-x-0 md:gap-x-20 gap-y-12 max-w-[400px] md:max-w-3xl mx-auto">
             {[
-              {name: 'Achraf Meziouni', role: 'Tech Lead', img: techLeadImg, delay: 0, href: 'https://github.com/AchrafMez'},
               {name: 'Abdelali Mahfoudi', role: 'Project Owner', img: projectOwnerImg, delay: 100, href: 'https://github.com/abdelali77'},
-              {name: 'Adham Bouras', role: 'Developer', img: developer1Img, delay: 300, href: 'https://github.com/42-adbouras'},
               {name: 'Nohaila Ben Aissa', role: 'Project Manager', img: projectManagerImg, delay: 200, href: 'https://github.com/Ak4ri-exe'},
+              {name: 'Achraf Meziouni', role: 'Tech Lead', img: techLeadImg, delay: 0, href: 'https://github.com/AchrafMez'},
+              {name: 'Adham Bouras', role: 'Developer', img: developer1Img, delay: 300, href: 'https://github.com/42-adbouras'},
               {name: 'Nisrine Er Rouihi', role: 'Developer', img: developer2Img, delay: 400, href: 'https://github.com/0x00siza'},
             ].map((member) => (
               <TeamMemberCard

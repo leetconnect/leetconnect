@@ -17,14 +17,14 @@ export function Intro(){
                     transition={{duration: 0.5}}
                     className="text-center">
                     
-                    <motion.div
+                    {/* <motion.div
                         initial={{opacity: 0, scale: 0.9}}
                         animate={{opacity: 1, scale: 1}}
                         transition={{duration: 0.5, delay: 0.1}}
                         className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-accent text-sm">
                         <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                         Now accepting new freelancers
-                    </motion.div>
+                    </motion.div> */}
 
                     <motion.h1
                         initial={{opacity: 0, y: 20}}

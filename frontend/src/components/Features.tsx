@@ -1,8 +1,18 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Search,MessageSquare,Shield,Zap,Globe,Award,} from "lucide-react";
+import { Search, MessageSquare, Shield, Zap, Globe, Award, type LucideIcon } from "lucide-react";
 
-const features = [
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+interface FeatureCardProps extends Feature {
+  index?: number;
+}
+const features: Feature[] = [
     {
       icon: Search,
       title: "Smart Matching",
@@ -41,7 +51,7 @@ const features = [
     },
   ];
 
-export function FeatureCard({icon: Icon, title, description, index = 0 }){
+  export function FeatureCard({ icon: Icon, title, description, index = 0 }: FeatureCardProps) {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-100px" });
   

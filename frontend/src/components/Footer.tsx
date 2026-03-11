@@ -1,6 +1,11 @@
 import { Github } from "lucide-react";
+import { type SVGProps } from "react";
+import { Link } from "react-router-dom";
+import { Logo } from "@/components/Logo";
 
-function DiscordIcon(props) {
+function DiscordIcon(props: SVGProps<SVGSVGElement>) {
+
+
     return (
         <svg
             {...props}
@@ -11,8 +16,6 @@ function DiscordIcon(props) {
         </svg>
     );
 }
-import { Link } from "react-router-dom";
-import { Logo } from "@/components/Logo";
 
 export function Footer() {
     return (
