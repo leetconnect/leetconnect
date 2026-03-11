@@ -1,7 +1,15 @@
-import React from 'react';
+// import React from 'react';
 import { motion } from 'framer-motion';
 
-export function TeamMemberCard({ name, role, img, href = "", delay = 0 }){
+interface TeamMemberCardProps {
+    name: string;
+    role: string;
+    img: string;
+    href?: string;
+    delay?: number;
+}
+
+export function TeamMemberCard({ name, role, img, href = "", delay = 0 }: TeamMemberCardProps) {
     return (
         <motion.a
             initial={{opacity: 0, y: 40}}

@@ -1,7 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-export function Logo({ className }) {
+interface LogoProps {
+    className?: string;
+}
+
+export function Logo({ className }: LogoProps) {
     const handleScrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
