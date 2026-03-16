@@ -12,4 +12,4 @@ router.get('/health', async (req: Request, res: Response) => {
     res.status(503).json({ status: 'error', service: 'marketplace', error: error.message });
   }
 });
-module.exports = router;
+export default router;
