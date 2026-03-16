@@ -4,8 +4,6 @@ import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 
 function DiscordIcon(props: SVGProps<SVGSVGElement>) {
-
-
     return (
         <svg
             {...props}
