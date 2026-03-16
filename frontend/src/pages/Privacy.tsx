@@ -1,16 +1,16 @@
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
-export default function Privacy(){
+export default function Privacy() {
     return (
         <div className="flex flex-col min-h-screen bg-background">
-            <Navbar/>
+            <Navbar />
             <main className="flex-1 container mx-auto px-6 py-32 max-w-[800px]">
-                <h1 className="font-['Inter'] text-4xl sm:text-5xl font-semibold mb-12 tracking-tight text-foreground">
+                <h1 className="font-sans text-4xl sm:text-5xl font-semibold mb-12 tracking-tight text-foreground">
                     Privacy Policy
                 </h1>
 
-                <div className="font-['Inter'] text-muted-foreground text-[15px] leading-relaxed space-y-8">
+                <div className="font-sans text-muted-foreground text-[15px] leading-relaxed space-y-8">
                     <p className="mb-12">
                         Last updated: February 2026
                     </p>
@@ -51,7 +51,7 @@ export default function Privacy(){
                     </section>
                 </div>
             </main>
-            <Footer/>
+            <Footer />
         </div>
     );
 }

@@ -2,22 +2,32 @@
   "name": "@leetconnect/marketplace-service",
   "version": "1.0.0",
   "description": "marketplace service",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "helmet": "^8.0.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.5",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "ioredis": "^5.4.1"
+    "@leetconnect/shared": "1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^25.4.0",
+    "ts-node-dev": "^2.0.0"
   }
 }

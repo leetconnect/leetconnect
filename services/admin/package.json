@@ -2,10 +2,11 @@
   "name": "@leetconnect/admin-service",
   "version": "1.0.0",
   "description": "admin service",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -13,7 +14,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "helmet": "^8.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "@leetconnect/shared": "1.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
