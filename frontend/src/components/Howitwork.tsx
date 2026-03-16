@@ -1,9 +1,16 @@
-// @ts-nocheck
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import stepImage from "../assets/wp9365202.jpg";
 
-export function StepItem({ number, title, description, image, index = 0 }) {
+interface StepItemProps {
+  number: string;
+  title: string;
+  description: string;
+  image: string;
+  index?: number;
+}
+
+export function StepItem({ number, title, description, image, index = 0 }: StepItemProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const isEven = index % 2 === 0;

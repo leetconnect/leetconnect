@@ -2,7 +2,6 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Search, MessageSquare, Shield, Zap, Globe, Award, type LucideIcon } from "lucide-react";
 
-
 interface Feature {
   icon: LucideIcon;
   title: string;
