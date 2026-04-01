@@ -1,14 +1,16 @@
 // load env variables
 require('dotenv').config(); 
 
-
+// import {PrismaClient} from '@prisma/client';
 // create express instance
 const express = require('express');
+const bcrypt = require('bcrypt');
 const app = express();
-
 const PORT = process.env.PORT || 4000;
 
-// express.json middleware is applied to parse incoming JSON request bodies, making the data accessible via req.body
+// const router = express.router();
+// const prisma = new PrismaClient();
+
 app.use(express.json());
 
 const users = [
@@ -22,7 +24,7 @@ app.post('/', function(req, res){
     res.end();
 });
 
-app.post('/register', function(req, res){
+app.post('/register', async (req, res) => {
    
     // extract data
     const { username, email, password } = req.body;
@@ -41,12 +43,21 @@ app.post('/register', function(req, res){
     if (usernameTaken) return res.status(409).json({ error: 'Username is already used' });
 
     
-    // hash passwords + salt
+    // slow hash passwords + salt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     // save data
-    
+    users.push({
+        username: username,
+        email: email,
+        password: hashedPassword,
+    });
+
+    console.log(users);
     // send response code and message :3
     return res.status(200).json({message: `Welcome ${username} 🐱‍👓`});
+    // add rate limiting
 });
 
 
