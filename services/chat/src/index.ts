@@ -16,7 +16,7 @@ dotenv.config({ path: '../../.env', quiet: true});
 // console.log(process.env);
 
 const app = express();
-const PORT = process.env.CHAT_PORT || 3003;
+const PORT = process.env.CHAT_DB_PORT || 3003;
 
 app.use(express.json());
 

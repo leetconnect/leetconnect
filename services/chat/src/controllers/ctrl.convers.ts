@@ -1,14 +1,133 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
+import * as err from '../middleware/error.handler';
+
+function parse_id(value: unknown, label: string): number {
+	const parsed = Number(value);
+	if (!Number.isInteger(parsed) || parsed <= 0)
+		throw new err.BadRequestError(`Invalid ${label}`);
+	return parsed;
+}
+
+function parse_type(value: unknown) {
+	if (value === 'Direct' || value === 'Group')
+		return value;
+	throw new err.BadRequestError('type must be Direct or Group');
+}
+
+function ensure_unique_ids(ids: number[]): number[] {
+	const unique = [...new Set(ids)];
+	if (unique.length !== ids.length)
+		throw new err.BadRequestError('member_ids must be unique');
+	return unique;
+}
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	// console.log('List user conversations');
 	// res.send('GET: /convers/ endpoint');
+	try {
+		const curr_user = parse_id(req.body.user_id, 'user_id');
+		const convers = await prisma.convers.findMany({
+			where: {
+				members: {
+					some: {user_id: curr_user}
+				}
+			},
+			orderBy: {updated_at: 'desc'}
+		});
+		res.status(200).json(convers);
+	} catch (err) {
+		next(err);
+	}
 }
 
-export function create(req: Request, res: Response, next: NextFunction) {
-	console.log('Create a new conversation');
-	res.send('POST: /convers/ endpoint');
+export async function create(req: Request, res: Response, next: NextFunction) {
+	try {
+		const user_id = parse_id(req.body.user_id, 'user_id');
+		const type = parse_type(req.body.type);
+
+		if (!Array.isArray(req.body.member_ids))
+			throw new err.BadRequestError('member_ids must be an array');
+
+		let member_ids = req.body.member_ids.map((id: any) => parse_id(id, 'member_id'));
+
+		member_ids.push(user_id);
+		member_ids = ensure_unique_ids(member_ids);
+
+		if (type === 'Direct' && member_ids.length !== 2)
+			throw new err.BadRequestError('Direct conversation must have exactly 2 members');
+
+		if (type === 'Group' && member_ids.length < 2)
+			throw new err.BadRequestError('Group conversation must have at least 2 members');
+
+		if (type === 'Group' && (!req.body.name || !req.body.name.trim()))
+			throw new err.BadRequestError('name is required for Group conversation');
+
+		const users = await prisma.user.findMany({
+			where: { id: { in: member_ids } },
+			select: { id: true },
+		});
+
+		if (users.length !== member_ids.length)
+			throw new err.NotFoundError('one or more users do not exist');
+
+		if (type === 'Direct') {
+			const [user_a, user_b] = member_ids;
+
+			const possible_directs = await prisma.convers.findMany({
+				where: {
+					type: 'Direct',
+					AND: [
+						{members:{some:{user_id:user_a}}},
+						{members:{some:{user_id:user_b}}},
+					],
+				},
+				include: {
+					members: { select: { user_id: true } },
+				},
+			});
+
+			const existing_direct = possible_directs.find((conversation) => {
+				if (conversation.members.length !== 2)
+					return (false);
+				const ids = conversation.members.map((m) => m.user_id).sort((a, b) => a - b);
+				const target = [user_a, user_b].sort((a, b) => a - b);
+				return (ids[0] === target[0] && ids[1] === target[1]);
+			});
+
+			if (existing_direct)
+				throw new err.BadRequestError('conversation already exists');
+		}
+
+		const created = await prisma.$transaction(async (trans) => {
+			const conversation = await trans.convers.create({
+				data: {
+					type: type,
+					name: type === 'Group' ? req.body.name!.trim() : null,
+				},
+			});
+
+			await trans.conversMember.createMany({
+				data: member_ids.map((uid: any) => ({
+					convers_id: conversation.id,
+					user_id: uid,
+				})),
+			});
+
+			return trans.convers.findUnique({
+				where: { id: conversation.id },
+				include: {
+					members: {
+						select: { user_id: true, joined_at: true },
+					},
+				},
+			});
+		});
+
+		res.status(201).json(created);
+	} catch (err) {
+		next(err);
+	}
 }
 
 export function get(req: Request, res: Response, next: NextFunction) {
