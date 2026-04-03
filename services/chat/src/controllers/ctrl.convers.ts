@@ -130,17 +130,134 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-export function get(req: Request, res: Response, next: NextFunction) {
-	console.log('Get conversation details');
-	res.send(`GET: /convers/${req.params.id} endpoint`);
+export async function get(req: Request, res: Response, next: NextFunction) {
+	// console.log('Get conversation details');
+	// res.send(`GET: /convers/${req.params.id} endpoint`);
+	try {
+		const user_id = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+
+		const convers = await prisma.convers.findFirst({
+			where: {
+				id: convers_id,
+				members: {some: {user_id: user_id}}
+			},
+			include: {
+				members: {
+					select: {user_id: true, joined_at: true}
+				},
+				messages: {
+					orderBy: {created_at: 'desc'},
+					take: 20,
+					select: {
+						id: true,
+						sender_id: true,
+						content: true,
+						created_at: true,
+					}
+				}
+			}
+		});
+		if (!convers)
+			throw new err.NotFoundError('conversation not found');
+		res.status(200).json(convers);
+
+	} catch (err) {
+		next(err);
+	}
 }
 
-export function update(req: Request, res: Response, next: NextFunction) {
-	console.log('Update conversation details (name, etc.)');
-	res.send(`PUT: /convers/${req.params.id} endpoint`);
+async function assert_membership(convers_id: number, user_id: number) {
+	const member = await prisma.conversMember.findFirst({
+		where: {
+			convers_id: convers_id,
+			user_id,
+		},
+		select: { id: true },
+	});
+
+	if (!member)
+		throw new err.ForbiddenError('not a member of conversation');
 }
 
-export function remove(req: Request, res: Response, next: NextFunction) {
-	console.log('Soft delete / leave conversation');
-	res.send(`DELETE: /convers/${req.params.id} endpoint`);
+export async function update(req: Request, res: Response, next: NextFunction) {
+	// console.log('Update conversation details (name, etc.)');
+	// res.send(`PUT: /convers/${req.params.id} endpoint`);
+	try {
+		const user_id = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+
+		await assert_membership(convers_id, user_id);
+
+		const convers = await prisma.convers.findUnique({
+			where: {id: convers_id},
+			select: {id: true, type: true},
+		});
+		if (!convers)
+			throw new err.NotFoundError('conversation not found');
+
+		if (convers.type === 'Direct')
+			throw new err.BadRequestError('Direct conversations can not be edited');
+		if (!req.body.name || !req.body.name.trim())
+			throw new err.BadRequestError('name is required');
+
+		const updated = await prisma.convers.update({
+			where: {id: convers_id},
+			data: {name: req.body.name.trim()},
+			include: {
+				members: {
+					select: {user_id: true, joined_at: true},
+				}
+			}
+		});
+		res.status(201).json(updated);
+	} catch (err) {
+		next(err);
+	}
+}
+
+export async function remove(req: Request, res: Response, next: NextFunction) {
+	// console.log('Soft delete / leave conversation');
+	// res.send(`DELETE: /convers/${req.params.id} endpoint`);
+	try {
+		const user_id = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+
+		const membership = await prisma.conversMember.findFirst({
+			where: {convers_id, user_id},
+			select: {id: true},
+		});
+		if (!membership)
+			throw new err.ForbiddenError('not a member of conversation');
+
+		let convers_deleted = false;
+
+		await prisma.$transaction(async (trans) => {
+			await trans.conversMember.deleteMany({
+				where: {
+					convers_id,
+					user_id,
+				},
+			});
+
+			const members = await trans.conversMember.count({
+				where: {convers_id},
+			});
+
+			if (members === 0) {
+				await trans.convers.delete({
+					where: {id: convers_id},
+				});
+				convers_deleted = true;
+			}
+		});
+
+		res.status(200).json({
+			message: convers_deleted
+				? 'conversation deleted'
+				: 'left conversation',
+		});
+	} catch (err) {
+		next(err);
+	}
 }
