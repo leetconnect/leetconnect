@@ -22,7 +22,7 @@ export async function create(req: Request , res: Response, next: NextFunction) {
 	try {
 		const user_id = parse_user_id(req.params.user_id as string);
 		const {type, title, body} = req.body;
-		const notif = await prisma.notifcation.create({
+		const notif = await prisma.notification.create({
 			data: {
 				user_id: user_id,
 				type: type,
@@ -42,7 +42,7 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	// res.send(`GET: /api/chat/notifs endpoint`);
 	try {
 		const user_id = parse_user_id(req.params.user_id as string);
-		const notifs  = await prisma.notifcation.findMany({
+		const notifs  = await prisma.notification.findMany({
 			where: { user_id },
 			orderBy: { created_at: 'desc'},
 		});
@@ -57,7 +57,7 @@ export async function read(req: Request, res: Response, next: NextFunction) {
 	// res.send(`PATCH: /api/chat/notifs/${req.params.id}/read endpoint`);
 	try {
 		const notif_id = parse_notif_id(req.params.id as string);
-		const notifs = await prisma.notifcation.update({
+		const notifs = await prisma.notification.update({
 			where: {id: notif_id},
 			data: {is_read: true},
 		});
@@ -72,7 +72,7 @@ export async function read_all(req: Request, res: Response, next: NextFunction) 
 	// res.send(`PATCH: /api/chat/notifs/read-all endpoint`);
 	try {
 		const user_id = parse_user_id(req.params.user_id as string);
-		await prisma.notifcation.updateMany({
+		await prisma.notification.updateMany({
 			where: {user_id, is_read: false},
 			data :{is_read: true},
 		});
