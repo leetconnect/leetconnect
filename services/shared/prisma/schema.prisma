@@ -32,7 +32,7 @@ model User {
 
   conversations  ConversMember[]
   messages       Message[]
-  notifs         Notifcation[]
+  notifs         Notification[]
 
   sent_friend_req FriendRequest[] @relation("SentFriendRequests")
   recv_friend_req FriendRequest[] @relation("RecvFriendRequests")
@@ -80,7 +80,7 @@ model Message {
   @@index([convers_id, created_at])
 }
 
-model Notifcation {
+model Notification {
   id            Int             @id @default(autoincrement())
   user_id       Int
   type          NotifType

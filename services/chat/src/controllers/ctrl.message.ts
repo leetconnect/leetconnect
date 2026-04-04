@@ -1,13 +1,90 @@
 import type { Request, Response, NextFunction } from 'express';
+import prisma from '../config/config.database';
+import * as err from '../middleware/error.handler';
 
-export function list(req: Request, res: Response, next: NextFunction) {
-	console.log('List user messages');
-	res.send(`GET: convers/${req.params.id}/messages endpoint`);
+function parse_id(value: unknown, label: string): number {
+	const parsed = Number(value);
+	if (!Number.isInteger(parsed) || parsed <= 0)
+		throw new err.BadRequestError(`Invalid ${label}`);
+	return parsed;
 }
 
-export function send(req: Request, res: Response, next: NextFunction) {
-	console.log('Send a message');
-	res.send(`POST: convers/${req.params.id}/messages endpoint`);
+async function assert_membership(convers_id: number, user_id: number) {
+	const member = await prisma.conversMember.findFirst({
+		where: { convers_id, user_id },
+		select: { id: true },
+	});
+	if (!member)
+		throw new err.ForbiddenError('not a member of conversation');
+}
+
+export async function list(req: Request, res: Response, next: NextFunction) {
+	// console.log('List user messages');
+	// res.send(`GET: convers/${req.params.id}/messages endpoint`);
+	try {
+		const user_id	 = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+
+		await assert_membership(convers_id, user_id);
+
+		const messages = await prisma.message.findMany({
+			where: { convers_id: convers_id},
+			orderBy: { created_at: 'desc'},
+			select: {
+				id: true,
+				content: true,
+				sender_id: true,
+				created_at: true
+			}
+		});
+
+		res.status(200).json({messages});
+	} catch (err) {
+		next(err);
+	}
+}
+
+export async function send(req: Request, res: Response, next: NextFunction) {
+	// console.log('Send a message');
+	// res.send(`POST: convers/${req.params.id}/messages endpoint`);
+	try {
+		const user_id	 = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+
+		await assert_membership(convers_id, user_id);
+
+		const content = req.body.content?.trim();
+		if (!content)
+			throw new err.BadRequestError('content is missing');
+		if (content.length > 500)
+			throw new err.BadRequestError('content too long');
+
+		const message = await prisma.message.create({
+			data: {
+				content,
+				sender_id: user_id,
+				convers_id,
+			},
+			select: {
+				id: true,
+				content: true,
+				sender_id: true,
+				convers_id: true,
+				created_at: true
+			}
+		});
+		await prisma.convers.update({
+			where: {id: convers_id},
+			data: {updated_at: new Date()}
+		});
+
+		const io = req.app.get('io');
+		io.to(`convers:${convers_id}`).emit('new_message', message);
+
+		res.status(201).json(message);
+	} catch (err) {
+		next(err);
+	}
 }
 
 export function get(req: Request, res: Response, next: NextFunction) {
