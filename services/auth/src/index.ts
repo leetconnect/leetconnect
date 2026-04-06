@@ -17,7 +17,6 @@ import prisma from './lib/prisma';
 
 import authRoutes from './routes/auth.routes';
 import healthRoutes from './routes/health';
-import { register } from 'module';
 
 const app = express();
 const PORT =  3001;
@@ -42,6 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 // routes
 app.use('/api/auth', healthRoutes);
 app.use('/api/auth/', authRoutes);
+
 // error handler (must be after all routes)
 app.use(errorHandler);
 

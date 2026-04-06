@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
+import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
 
 function TrimAuthInput(body: {
@@ -41,7 +42,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         // Slow hash + salt
         // 12 rounds is the industry standard for slow hashing security
-        const hashedPassword = await bcrypt.hash(password, 12);
+        const hashedPassword = await bcrypt.hash(password, 12); // ?
 
         // Save to Database
         const newUser = await prisma.user.create({
@@ -66,6 +67,62 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             user: newUser
         });
 
+    } catch (error) {
+        next(error); // Sends error to the shared errorHandler
+    }
+};
+
+
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {identifier , password} = req.body; // identifier can be email or username
+        console.log("identifier: ", identifier);
+
+         if (!identifier || !password) {
+            return res.status(400).json({ error: 'Missing fields' });
+        }
+
+        // search for user by email or username
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: identifier },
+                    { username: identifier },
+                ],
+            },
+        });
+
+        if (!user) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        // check correct password
+        if (!user.password) { // need to add that user is using AOuth
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        
+        if (!isValidPassword) {
+            return res.status(401).json({ error: "Invalid Password" });
+        }
+
+        // generate jwt
+        const token = jwt.sign(
+            { sub: user.id, email: user.email, username: user.username },
+            process.env.JWT_SECRET as string,
+            { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({
+            token,
+            user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            createdAt: user.createdAt,
+            },
+        });
+        
     } catch (error) {
         next(error); // Sends error to the shared errorHandler
     }
