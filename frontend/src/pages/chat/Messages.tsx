@@ -1,6 +1,8 @@
 // @adbouras
 // import Avatar from "./Avatar";
 import Message from "./MessageLayer";
+import ChatInput from "./ChatInput";
+import ChatHeader from "./ChatHeader";
 
 export default function Messages() {
 	const m1 = {
@@ -30,19 +32,15 @@ export default function Messages() {
 		is_mine: true,
 	};
 	return (
-		<div>
-			{/* <Avatar name="Adham Bouras" image="https://cdn.intra.42.fr/users/09229a11c453f1262c72a2e85f43ea2e/adbouras.jpg"/>
-			<Avatar name="Sarah Chen"/>
-			<Avatar name="Dev Team Alpha"/>
+    <div className="min-h-screen flex flex-col">
+		<ChatHeader name="Sarah Chen" avatar="https://i.pravatar.cc/100?img=23" is_online={true} />
+      <div className="flex-1 overflow-y-auto p-4">
+        <Message message={m1} />
+        <Message message={m2} />
+        <Message message={m3} />
+        <ChatInput onSend={(content) => console.log("sent:", content)} />
+      </div>
 
-			<Avatar name="Emily Rodriguez" size="sm"/>
-			<Avatar name="Adham Bouras" size="sm" image="https://cdn.intra.42.fr/users/09229a11c453f1262c72a2e85f43ea2e/adbouras.jpg"/> */}
-			<div className="p-10">
-				<Message message={m1} />
-				<Message message={m2} />
-				<Message message={m3} />
-			</div>
-		</div>
-
-	);
+    </div>
+  );
 }
