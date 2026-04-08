@@ -3,16 +3,30 @@ import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
 
-function TrimAuthInput(body: {
-    username: string;
-    email: string;
-    password: string;
-    }) {
-    return {
-        username: body.username.trim(),
-        email: body.email.trim(),
-        password: body.password,
-  };
+
+type AuthBody = {
+    username?: unknown,
+    email?:unknown,
+    password?:unknown
+}
+
+function TrimAuthInput(body: AuthBody) {
+  const username =
+    typeof body.username === 'string'
+      ? body.username.trim()
+      : '';
+
+  const email =
+    typeof body.email === 'string'
+      ? body.email.trim()
+      : '';
+
+  const password =
+    typeof body.password === 'string'
+      ? body.password
+      : '';
+
+  return { username, email, password };
 }
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -25,11 +39,26 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // Check duplicates in Postgres
+        // turn into lowercase to compare in db
+        const normalizedEmail = email.toLowerCase();
+        const normalizedUsername = username.toLowerCase();
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
-                    { email: email }, // turn both into lowecase (temporarely) to compare :3
-                    { username: username }
+                    {
+                        email: {
+                            equals: normalizedEmail,
+                            mode: 'insensitive',
+                        },
+                    },
+
+                    {
+                        username: {
+                            equals: normalizedUsername,
+                            mode: 'insensitive',
+                        },
+                    },
                 ]
             }
         });
@@ -42,14 +71,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         // Slow hash + salt
         // 12 rounds is the industry standard for slow hashing security
-        const hashedPassword = await bcrypt.hash(password, 12); // ?
+        const hashedPassword = await bcrypt.hash(password, 12);
 
         // Save to Database
         const newUser = await prisma.user.create({
             data: {
-                // ive decided to store data as it was submitted 
+                // ive decided to store data as it is submitted 
                 // but in login i will lowercase the data to compare that way User123@gmail.com is the same as user123@gmail.com
-                username, // trim 
+                username,
                 email,     
                 password: hashedPassword,
             },
@@ -75,25 +104,25 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {identifier , password} = req.body; // identifier can be email or username
-        console.log("identifier: ", identifier);
-
-         if (!identifier || !password) {
+        const {email , password} = TrimAuthInput(req.body);
+        
+        if (!email || !password) {
             return res.status(400).json({ error: 'Missing fields' });
         }
 
-        // search for user by email or username
+        // search for user by email
+        const normalizedEmail = email.toLowerCase();
         const user = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { email: identifier },
-                    { username: identifier },
-                ],
+                email: {
+                        equals: normalizedEmail,
+                        mode: 'insensitive',
+                    }
             },
         });
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Invalid username" });
         }
 
         // check correct password
@@ -106,7 +135,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid Password" });
         }
 
-        // generate jwt
+        // generate jwt refresh or access ?
         const token = jwt.sign(
             { sub: user.id, email: user.email, username: user.username },
             process.env.JWT_SECRET as string,
