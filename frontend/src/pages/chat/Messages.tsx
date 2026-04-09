@@ -3,6 +3,19 @@
 import Message from "./MessageLayer";
 import ChatInput from "./ChatInput";
 import ChatHeader from "./ChatHeader";
+import ConversLayer from "./ConverLayer";
+import type { Conversation } from "./ConverLayer";
+
+const conv: Conversation = {
+	id: 1,
+	name: "Julian Martinez",
+	last: "Hey! Did you get a chance to look at th...",
+	timestamp: new Date().toLocaleDateString([], {
+		hour: "2-digit",
+		minute: "2-digit"
+	}),
+	unread: 69,
+}
 
 export default function Messages() {
 	const m1 = {
@@ -38,7 +51,8 @@ export default function Messages() {
         <Message message={m1} />
         <Message message={m2} />
         <Message message={m3} />
-        <ChatInput onSend={(content) => console.log("sent:", content)} />
+        <ChatInput onSend={(content) => console.log("sent:", content)}/>
+		<ConversLayer convers={conv} is_active={true} onClick={() => console.log("clicked")}/>
       </div>
 
     </div>
