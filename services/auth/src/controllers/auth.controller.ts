@@ -10,37 +10,34 @@ const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
 type AuthBody = {
     username?: unknown,
     email?:unknown,
-    password?:unknown
+    password?:unknown,
+    role?: unknown;
 }
 
 function TrimAuthInput(body: AuthBody) {
-  const username =
-    typeof body.username === 'string'
-      ? body.username.trim()
-      : '';
+    const username = typeof body.username === 'string' ? body.username.trim() : '';
 
-  const email =
-    typeof body.email === 'string'
-      ? body.email.trim()
-      : '';
+    const email = typeof body.email === 'string' ? body.email.trim() : '';
 
-  const password =
-    typeof body.password === 'string'
-      ? body.password
-      : '';
+    const password = typeof body.password === 'string' ? body.password : '';
 
-  return { username, email, password };
+    const role = typeof body.role === 'string' ? body.role.toUpperCase() : '';
+
+    return { username, email, password, role};
 }
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { username, email, password } = TrimAuthInput(req.body);
+        const { username, email, password, role } = TrimAuthInput(req.body);
 
         // input Validation
         if (!username || !email || !password) {
             return res.status(400).json({ error: 'Missing fields' });
         }
 
+        if (role !== 'CLIENT' && role !== 'FREELANCER') {
+            return res.status(400).json({ error: 'Invalid role selection' });
+        }
         // Check duplicates in Postgres
         // turn into lowercase to compare in db
         const normalizedEmail = email.toLowerCase();
@@ -68,7 +65,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         if (existingUser) {
             return res.status(409).json({ 
-                error: existingUser.email === email ? 'Email taken' : 'Username taken' 
+                error: existingUser.email.toLowerCase() === email.toLowerCase() ? 'Email taken' : 'Username taken' 
             });
         }
 
@@ -84,6 +81,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
                     username,
                     email,     
                     password: hashedPassword,
+                    role: role as any, // client of freelancer
                 },
                 // Ensure we don't return the password string in the response
                 select: {
@@ -94,6 +92,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
                     role: true
                 }
             });
+
             // generate refresh token
             const rt = await tx.refreshToken.create({
                 data: {
@@ -120,7 +119,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
 
         res.status(201).json({
-            message: "Welcome to LeetConnect",
+            message: `Welcome to LeetConnect ${username} !`,
             accessToken,
             user: { id: user.id, username: user.username, role: user.role }
         });
@@ -150,42 +149,45 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         });
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid username" });
+            return res.status(401).json({ error: "Invalid email or password" }); // with the same msg ,hacker cant know if an email is already in our DB :)
         }
 
         // check correct password
-        if (!user.password) { // need to add that user is using AOuth
+        if (!user.password) { // user might not have password if he using Aouth
             return res.status(401).json({ message: "Invalid credentials" });
         }
         const isValidPassword = await bcrypt.compare(password, user.password);
         
         if (!isValidPassword) {
-            return res.status(401).json({ error: "Invalid Password" });
+            return res.status(401).json({ error: "Invalid email or password" });
         }
 
         // generate jwt refresh and access tokens using private key :D
-        const accessToken = jwt.sign( { sub: user.id, email: user.email, username: user.username }
-            , privateKey, { 
-            algorithm: 'RS256', 
-            expiresIn: '15m' 
+        const refreshToken = await prisma.refreshToken.create({
+            data: {
+                token: generateRefreshToken(),
+                userId: user.id,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+            }
+        });
+
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+
+         res.cookie('refreshToken', refreshToken.token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            path: '/api/auth/refresh', 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         return res.status(200).json({
+            message: `Welcome Back ${user.username} !`,
             accessToken,
-            user: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            createdAt: user.createdAt,
-            },
+            user: { id: user.id, email: user.email, username: user.username, role: user.role }
         });
-        
+
     } catch (error) {
         next(error); // Sends error to the shared errorHandler
     }
 };
-
-// refresh route for generating new access token :3
-export const refresh = async(req: Request, res: Response, next: NextFunction) =>{
-    
-}
