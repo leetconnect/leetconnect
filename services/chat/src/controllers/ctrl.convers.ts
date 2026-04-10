@@ -26,14 +26,36 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	// console.log('List user conversations');
 	// res.send('GET: /convers/ endpoint');
 	try {
-		const curr_user = parse_id(req.body.user_id, 'user_id');
+		const curr_user = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
 		const convers = await prisma.convers.findMany({
 			where: {
 				members: {
 					some: {user_id: curr_user}
 				}
 			},
-			orderBy: {updated_at: 'desc'}
+			orderBy: {updated_at: 'desc'},
+			include: {
+				members: {
+					select: {
+						user_id: true,
+						user: {
+							select: {
+								username: true,
+								avatar: true
+							}
+						}
+					}
+				},
+				messages: {
+					orderBy: {created_at: 'desc'},
+					take: 1,
+					select: {
+						content:true,
+						sender_id: true,
+						created_at: true
+					}
+				}
+			}
 		});
 		res.status(200).json(convers);
 	} catch (err) {
@@ -134,7 +156,7 @@ export async function get(req: Request, res: Response, next: NextFunction) {
 	// console.log('Get conversation details');
 	// res.send(`GET: /convers/${req.params.id} endpoint`);
 	try {
-		const user_id = parse_id(req.body.user_id, 'user_id');
+		const user_id = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
 		const convers_id = parse_id(req.params.id, 'convers_id');
 
 		const convers = await prisma.convers.findFirst({
