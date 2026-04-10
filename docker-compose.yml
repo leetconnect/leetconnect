@@ -68,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+    - "5555:5555"  # exposed this port so I can connect to prisma ui
     environment:
       - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
