@@ -22,23 +22,42 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	// console.log('List user messages');
 	// res.send(`GET: convers/${req.params.id}/messages endpoint`);
 	try {
-		const user_id	 = parse_id(req.body.user_id, 'user_id');
+		const user_id	 = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
 		const convers_id = parse_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
 
+		const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+		const cursor = req.query.cursor ? parse_id(req.query.cursor, 'cursor') : undefined;
+
 		const messages = await prisma.message.findMany({
 			where: { convers_id: convers_id},
 			orderBy: { created_at: 'desc'},
+			take: limit + 1,
+			...(cursor && {
+				cursor: {id: cursor},
+				skip: 1
+			}),
 			select: {
 				id: true,
 				content: true,
 				sender_id: true,
-				created_at: true
+				created_at: true,
+				sender: {
+					select: {
+						username: true,
+						avatar: true
+					}
+				}
 			}
 		});
 
-		res.status(200).json({messages});
+		const has_more =messages.length > limit;
+		if (has_more) messages.pop();
+
+		const next_cursor = has_more ? (messages[messages.length - 1]!.id) : null;
+
+		res.status(200).json({ messages, next_cursor});
 	} catch (err) {
 		next(err);
 	}
@@ -56,7 +75,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const content = req.body.content?.trim();
 		if (!content)
 			throw new err.BadRequestError('content is missing');
-		if (content.length > 500)
+		if (content.length > 1500)
 			throw new err.BadRequestError('content too long');
 
 		const message = await prisma.message.create({
@@ -70,7 +89,13 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 				content: true,
 				sender_id: true,
 				convers_id: true,
-				created_at: true
+				created_at: true,
+				sender: {
+					select: {
+						username: true,
+						avatar: true
+					}
+				}
 			}
 		});
 		await prisma.convers.update({
@@ -87,12 +112,72 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-export function get(req: Request, res: Response, next: NextFunction) {
-	console.log('Get a single message');
-	res.send(`GET: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
+export async function get_one(req: Request, res: Response, next: NextFunction) {
+	// console.log('Get a single message');
+	// res.send(`GET: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
+	try {
+		const user_id	 = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+		const msg_id	 = parse_id(req.body.msg_id, 'msg_id');
+
+		await assert_membership(convers_id, user_id);
+
+		const message = await prisma.message.findFirst({
+			where: {
+				id: msg_id,
+				convers_id
+			},
+			select: {
+				id: true,
+				content: true,
+				sender_id: true,
+				convers_id: true,
+				created_at: true,
+				sender: {
+					select: {
+						username: true,
+						avatar: true
+					}
+				}
+			}
+		});
+		if (!message)
+			throw new err.NotFoundError('message not found');
+
+		res.status(200).json(message);
+	} catch (err) {
+		next(err);
+	}
 }
 
-export function remove(req: Request, res: Response, next: NextFunction) {
-	console.log('Delete a single message');
-	res.send(`DELETE: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
+export async function remove(req: Request, res: Response, next: NextFunction) {
+	// console.log('Delete a single message');
+	// res.send(`DELETE: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
+	try {
+		const user_id	 = parse_id(req.body.user_id, 'user_id');
+		const convers_id = parse_id(req.params.id, 'convers_id');
+		const msg_id	 = parse_id(req.body.msg_id, 'msg_id');
+
+		await assert_membership(convers_id, user_id);
+
+		const message = await prisma.message.findFirst({
+			where: {
+				id: msg_id,
+				convers_id
+			},
+			select: {
+				id: true,
+				content: true,
+				sender_id: true
+			}
+		});
+		if (!message)
+			throw new err.NotFoundError('message not found');
+
+		await prisma.message.delete({where: {id: msg_id}});
+
+		res.status(200).json({message: 'message deleted'});
+	} catch (err) {
+		next(err);
+	}
 }

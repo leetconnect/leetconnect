@@ -1,6 +1,7 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
 import http				from 'http';
+import path				from 'path';
 import { Server }		from 'socket.io';
 
 import health_routes	from './routes/route.health';
@@ -23,7 +24,9 @@ const PORT = process.env.CHAT_DB_PORT || 3003;
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server, {
+	cors: { origin: '*' },
+});
 
 app.use(express.json());
 app.set('io', io);
