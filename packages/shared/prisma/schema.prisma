@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id             Int          @id @default(autoincrement())
+  id             String       @id @default(uuid())
   email          String       @unique
   username       String       @unique
 
@@ -57,7 +57,7 @@ model Convers {
 
 model ConversMember {
   id            Int             @id @default(autoincrement())
-  user_id       Int
+  user_id       String
   convers_id    Int
   joined_at     DateTime        @default(now())
 
@@ -70,7 +70,7 @@ model ConversMember {
 model Message {
   id            Int             @id @default(autoincrement())
   content       String
-  sender_id     Int
+  sender_id     String
   convers_id    Int
   created_at    DateTime        @default(now())
 
@@ -82,7 +82,7 @@ model Message {
 
 model Notification {
   id            Int             @id @default(autoincrement())
-  user_id       Int
+  user_id       String
   type          NotifType
   title         String
   body          String?
@@ -96,8 +96,8 @@ model Notification {
 
 model FriendRequest {
   id            Int             @id @default(autoincrement())
-  sender_id     Int
-  receiver_id   Int
+  sender_id     String
+  receiver_id   String
   status        FriendReqStatus @default(PENDING)
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
@@ -126,4 +126,3 @@ enum FriendReqStatus {
   ACCEPTED
   REJECTED
 }
-

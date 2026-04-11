@@ -2,14 +2,21 @@ import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 
-function parse_id(value: unknown, label: string): number {
+function parse_user_id(value: unknown, label: string): string {
+	const val = typeof value === 'string' ? value.trim() : '';
+	if (!val)
+		throw new err.BadRequestError(`Invalid ${label}`);
+	return val;
+}
+
+function parse_int_id(value: unknown, label: string): number {
 	const parsed = Number(value);
 	if (!Number.isInteger(parsed) || parsed <= 0)
 		throw new err.BadRequestError(`Invalid ${label}`);
 	return parsed;
 }
 
-async function assert_membership(convers_id: number, user_id: number) {
+async function assert_membership(convers_id: number, user_id: string) {
 	const member = await prisma.conversMember.findFirst({
 		where: { convers_id, user_id },
 		select: { id: true },
@@ -22,13 +29,13 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	// console.log('List user messages');
 	// res.send(`GET: convers/${req.params.id}/messages endpoint`);
 	try {
-		const user_id	 = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
-		const convers_id = parse_id(req.params.id, 'convers_id');
+		const user_id	 = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
 
 		const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
-		const cursor = req.query.cursor ? parse_id(req.query.cursor, 'cursor') : undefined;
+		const cursor = req.query.cursor ? parse_int_id(req.query.cursor, 'cursor') : undefined;
 
 		const messages = await prisma.message.findMany({
 			where: { convers_id: convers_id},
@@ -67,8 +74,8 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 	// console.log('Send a message');
 	// res.send(`POST: convers/${req.params.id}/messages endpoint`);
 	try {
-		const user_id	 = parse_id(req.body.user_id, 'user_id');
-		const convers_id = parse_id(req.params.id, 'convers_id');
+		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
+		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
 
@@ -116,9 +123,9 @@ export async function get_one(req: Request, res: Response, next: NextFunction) {
 	// console.log('Get a single message');
 	// res.send(`GET: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
 	try {
-		const user_id	 = parse_id(req.query.user_id ?? req.body.user_id, 'user_id');
-		const convers_id = parse_id(req.params.id, 'convers_id');
-		const msg_id	 = parse_id(req.body.msg_id, 'msg_id');
+		const user_id	 = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const convers_id = parse_int_id(req.params.id, 'convers_id');
+		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
 
 		await assert_membership(convers_id, user_id);
 
@@ -154,9 +161,9 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 	// console.log('Delete a single message');
 	// res.send(`DELETE: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
 	try {
-		const user_id	 = parse_id(req.body.user_id, 'user_id');
-		const convers_id = parse_id(req.params.id, 'convers_id');
-		const msg_id	 = parse_id(req.body.msg_id, 'msg_id');
+		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
+		const convers_id = parse_int_id(req.params.id, 'convers_id');
+		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
 
 		await assert_membership(convers_id, user_id);
 

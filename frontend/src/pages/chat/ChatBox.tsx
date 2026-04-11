@@ -7,7 +7,7 @@ interface ChatBoxProp {
 	convers_name: 	string;
 	convers_avatar: string;
 	messages: 		Message[];
-	curr_user: 		number;
+	curr_user: 		string;
 	onSendMessage: 	(content: string) => void;
 }
 

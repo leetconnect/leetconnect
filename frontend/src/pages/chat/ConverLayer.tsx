@@ -1,7 +1,7 @@
 import Avatar from "./Avatar";
 
 export interface ConvMember {
-	user_id: 	number;
+	user_id: 	string;
 	user: {
 		username:	string;
 		avatar:	string;
@@ -10,7 +10,7 @@ export interface ConvMember {
 
 export interface ConvLastMessage {
 	content:	string;
-	sender_id:	number;
+	sender_id:	string;
 	created_at:	string;
 }
 
@@ -27,7 +27,7 @@ export interface Conversation {
 interface ConversLayerProp {
 	convers: 	Conversation;
 	is_active: 	boolean;
-	curr_user: 	number;
+	curr_user: 	string;
 	onClick: () => void;
 }
 

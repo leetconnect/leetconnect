@@ -3,7 +3,7 @@ import Avatar from "./Avatar";
 export interface Message {
 	id: 			number;
 	content: 		string;
-	sender_id: 		number;
+	sender_id: 		string;
 	created_at: 	string;
 	convers_id: 	number;
 	sender: {
@@ -14,7 +14,7 @@ export interface Message {
 
 interface MessageProp {
 	message: 		Message;
-	curr_user:		number;
+	curr_user:		string;
 }
 
 export default function MessageLayer({message, curr_user}: MessageProp) {

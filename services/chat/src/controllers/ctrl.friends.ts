@@ -2,12 +2,18 @@ import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 
-function parse_id(value: unknown, label: string): number {
-	const parsed = Number(value);
+function parse_user_id(value: unknown, label: string): string {
+	const val = typeof value === 'string' ? value.trim() : '';
+	if (!val)
+		throw new err.BadRequestError(`Invalid ${label}`);
+	return val;
+}
 
+function parse_int_id(value: unknown, label: string): number {
+	const parsed = Number(value);
 	if (!Number.isInteger(parsed) || parsed <= 0)
 		throw new err.BadRequestError(`Invalid ${label}`);
-	return (parsed);
+	return parsed;
 }
 
 function check_pending(status: string): void {
@@ -19,8 +25,8 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 	// console.log('Send a friend request');
 	// res.send(`POST: api/friend/requests endpoint`);
 	try {
-		const sender_id   = parse_id(req.body.sender_id, 'sender_id');
-		const receiver_id = parse_id(req.body.receiver_id, 'receiver_id');
+		const sender_id   = parse_user_id(req.body.sender_id, 'sender_id');
+		const receiver_id = parse_user_id(req.body.receiver_id, 'receiver_id');
 
 		if (sender_id === receiver_id)
 			throw new err.BadRequestError('self request error');
@@ -65,11 +71,11 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 	// console.log('Accept an incoming friend request');
 	// res.send(`PATCH: api/friend/requests/${id}/accept endpoint`);
 	try {
-		const sender_id = parse_id(req.params.id, 'sender_id');
-		const user_id	= parse_id(req.body.receiver_id, 'receiver_id');
+		const request_id = parse_int_id(req.params.id, 'request_id');
+		const user_id	 = parse_user_id(req.body.receiver_id, 'receiver_id');
 
 		const request = await prisma.friendRequest.findUnique({
-			where: {id: sender_id}
+			where: {id: request_id}
 		});
 		if (!request)
 			throw new err.NotFoundError('friend request not found');
@@ -79,7 +85,7 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 			throw new err.ForbiddenError('only the receiver can accept');
 
 		const updated = await prisma.friendRequest.update({
-			where: {id: sender_id},
+			where: {id: request_id},
 			data: {status: 'ACCEPTED'}
 		});
 		// TODO: send notif
@@ -94,11 +100,11 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 	// console.log('Reject an incoming friend request');
 	// res.send(`PATCH: api/friend/requests/${id}/reject endpoint`);
 	try {
-		const sender_id = parse_id(req.params.id, 'friend_request_id');
-		const user_id	= parse_id(req.body.receiver_id, 'user_id');
+		const request_id = parse_int_id(req.params.id, 'request_id');
+		const user_id	 = parse_user_id(req.body.receiver_id, 'user_id');
 
 		const request = await prisma.friendRequest.findUnique({
-			where: {id: sender_id}
+			where: {id: request_id}
 		});
 		if (!request)
 			throw new err.NotFoundError('friend request not found');
@@ -108,7 +114,7 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 			throw new err.ForbiddenError('only the receiver can reject');
 
 		const updated = await prisma.friendRequest.update({
-			where: {id: sender_id},
+			where: {id: request_id},
 			data: {status: 'REJECTED'}
 		});
 		// TODO: send notif
@@ -123,7 +129,7 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 	// console.log('List all user incoming friend requests');
 	// res.send(`GET: api/friend/requests/incoming/${user_id} endpoint`);
 	try {
-		const user_id = parse_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.params.user_id, 'user_id');
 		const reguest = await prisma.friendRequest.findMany({
 			where: {
 				receiver_id: user_id,
@@ -142,7 +148,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 	// console.log('List all user outgoing friend requests');
 	// res.send(`GET: api/friend/requests/outgoing/${user_id} endpoint`);
 	try {
-		const user_id = parse_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.params.user_id, 'user_id');
 		const reguest = await prisma.friendRequest.findMany({
 			where: {
 				sender_id: user_id,
@@ -158,7 +164,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.params.user_id, 'user_id');
 		const request = await prisma.friendRequest.findMany({
 			where: {
 				status: 'ACCEPTED',
@@ -177,8 +183,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function cancel(req: Request, res: Response, next: NextFunction) {
 	try {
-		const request_id =parse_id(req.params.id, 'request_id');
-		const user_id	 = parse_id(req.body.user_id, 'user_id');
+		const request_id = parse_int_id(req.params.id, 'request_id');
+		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
 		const request	 = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
 		});
@@ -200,8 +206,8 @@ export async function cancel(req: Request, res: Response, next: NextFunction) {
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	= parse_id(req.params.user_id, 'user_id');
-		const friend_id = parse_id(req.body.friend_id, 'friend_id');
+		const user_id	= parse_user_id(req.params.user_id, 'user_id');
+		const friend_id = parse_user_id(req.body.friend_id, 'friend_id');
 
 		if (user_id === friend_id)
 			throw new err.BadRequestError('same accoutn error');

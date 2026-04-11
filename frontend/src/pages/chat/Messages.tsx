@@ -8,7 +8,7 @@ import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
 import type { Conversation } from "./ConverLayer";
 
-const CURRENT_USER_ID = Number(new URLSearchParams(window.location.search).get('user_id')) || 1;; // TODO: replace with auth user
+const CURRENT_USER_ID = new URLSearchParams(window.location.search).get('user_id') ?? ''; // TODO: replace with auth user
 
 export default function Messages() {
 	const [conversations, setConversations] = useState<Conversation[]>([]);

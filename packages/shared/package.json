@@ -6,9 +6,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "npx ts-node prisma/seed.ts",
+    "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.2",
     "jsonwebtoken": "^9.0.2",
     "ioredis": "^5.4.1",
     "sequelize": "^6.37.5",
@@ -19,6 +25,9 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^25.4.0",
     "@types/express": "^5.0.6",
+    "dotenv": "^16.6.1",
+    "prisma": "^6.19.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }
