@@ -2,11 +2,11 @@
 
 import jwt from 'jsonwebtoken'
 import fs from 'fs'
-import path from 'path'
+import { JwtPayload } from '@leetconnect/shared'; 
 
 const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
 
-export const generateAccessToken = (payload: object) => {
+export const generateAccessToken = (payload: JwtPayload) => {
   return jwt.sign(payload, privateKey, {
     algorithm: 'RS256',
     expiresIn: '15m',

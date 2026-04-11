@@ -107,6 +107,7 @@ services:
       - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
       - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
       - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
     volumes:
       - ./certs:/etc/ssl/internal:ro
   chat:
@@ -131,6 +132,7 @@ services:
       - SSL_KEY_PATH=/etc/ssl/internal/chat.key
       - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
       - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
     volumes:
       - ./certs:/etc/ssl/internal:ro
   analytics:
@@ -155,6 +157,7 @@ services:
       - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
       - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
       - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
     volumes:
       - ./certs:/etc/ssl/internal:ro
   admin:
@@ -178,6 +181,7 @@ services:
       - SSL_KEY_PATH=/etc/ssl/internal/admin.key
       - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
       - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
     volumes:
       - ./certs:/etc/ssl/internal:ro
   frontend:

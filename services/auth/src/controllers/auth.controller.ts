@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
 import fs from "fs";
 import { generateAccessToken, generateRefreshToken } from '../lib/token';
+import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
 
 const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
 
@@ -104,8 +105,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
             return { user: newUser, refreshToken: rt };
         });
-
-       
+        
         // generate access token
         const accessToken = generateAccessToken({ userId: user.id, role: user.role });
         
@@ -116,6 +116,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             sameSite: 'strict', // Prevents CSRF
             path: '/api/auth/refresh', // Only send to refresh route
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        // shout out hal3ar waaa to other services l user tcreayaaaa waaaa 
+        await publishEvent(AUTH_EVENTS.USER_REGISTERED, {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role
         });
 
         res.status(201).json({
@@ -149,7 +157,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         });
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid email or password" }); // with the same msg ,hacker cant know if an email is already in our DB :)
+            return res.status(401).json({ error: "Invalid email or password" }); // prevents hackers from fishing for emails to see who has an account on the website
         }
 
         // check correct password
@@ -192,3 +200,45 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
+// refresh route for generating new access token when it expires :3
+// => allows the user to stay logged in without the needs 
+export const refresh = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { refreshToken: tokenFromCookie } = req.cookies;
+
+        if (!tokenFromCookie) {
+            return res.status(401).json({ error: "Refresh token missing" });
+        }
+
+        // Look for the token in DB and include the user
+        const storedToken = await prisma.refreshToken.findUnique({
+            where: { token: tokenFromCookie },
+            include: { user: true } // get user info
+        });
+
+        // Security Checks => does token exist in db? | is the user session canceled? | did the refresh token expire?
+        if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {
+            return res.status(401).json({ error: "Invalid or expired session" });
+        }
+
+        // Generate a fresh Access Token
+        const newAccessToken = generateAccessToken({ 
+            userId: storedToken.user.id, 
+            role: storedToken.user.role 
+        });
+
+        return res.json({ accessToken: newAccessToken });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// logout => delete refreshToken from db and from httpOnly cookie
+// export const logout = async (req: Request, res: Response) => {
+//     const { refreshToken } = req.cookies;
+//     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+//     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+//     res.sendStatus(204);
+// };
