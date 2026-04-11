@@ -2,9 +2,9 @@ import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 
-function parse_user_id(id_param: string | undefined): number {
-	const user_id = Number(id_param);
-	if (!Number.isInteger(user_id) || user_id <= 0) {
+function parse_user_id(id_param: string | undefined): string {
+	const user_id = id_param?.trim();
+	if (!user_id) {
 		throw new err.BadRequestError('Invalid user id');
 	}
 	return user_id;

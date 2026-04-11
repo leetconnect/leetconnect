@@ -112,38 +112,38 @@ interface PaginatedMessages {
 
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
-	listConversations: (user_id: number) =>
+	listConversations: (user_id: string) =>
 		api<Conversation[]>(`/chat/convers?user_id=${user_id}`),
 
-	getConversation: (convers_id: number, user_id: number) =>
+	getConversation: (convers_id: number, user_id: string) =>
 		api<Conversation>(`/chat/convers/${convers_id}?user_id=${user_id}`),
 
-	leaveConversation: (convers_id: number, user_id: number) =>
+	leaveConversation: (convers_id: number, user_id: string) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}`, {
 			method: 'DELETE',
 			body: { user_id: user_id },
 		}),
 
 	// ---------------------- Messages ----------------------
-	listMessages: (convers_id: number, user_id: number, limit = 20, cursor?: number) => {
+	listMessages: (convers_id: number, user_id: string, limit = 20, cursor?: number) => {
 		let url = `/chat/convers/${convers_id}/messages?user_id=${user_id}&limit=${limit}`;
 		if (cursor)
             url += `&cursor=${cursor}`;
 		return api<PaginatedMessages>(url);
 	},
 
-	sendMessage: (convers_id: number, user_id: number, content: string) =>
+	sendMessage: (convers_id: number, user_id: string, content: string) =>
 		api<Message>(`/chat/convers/${convers_id}/messages`, {
 			method: 'POST',
 			body: { user_id: user_id, content },
 		}),
 
-	getMessage: (convers_id: number, user_id: number, msg_id: number) =>
+	getMessage: (convers_id: number, user_id: string, msg_id: number) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
 			body: { user_id: user_id, msg_id: msg_id },
 		}),
 
-	deleteMessage: (convers_id: number, user_id: number, msg_id: number) =>
+	deleteMessage: (convers_id: number, user_id: string, msg_id: number) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
 			method: 'DELETE',
 			body: { user_id: user_id, msg_id: msg_id },

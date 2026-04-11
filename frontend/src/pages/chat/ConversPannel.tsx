@@ -4,7 +4,7 @@ import ConversLayer from "./ConverLayer";
 interface ConversPanelProps {
 	conversations: Conversation[];
 	active_id: number | null;
-	curr_user: number;
+	curr_user: string;
 	onSelect: (id: number) => void;
 }
 
