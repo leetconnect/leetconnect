@@ -4,6 +4,7 @@ import { RoleBadge } from '../../components/ui/RoleBadge';
 import { MOCK_JOBS, MOCK_USERS } from '../../lib/mockData';
 import type { Role } from '../../types';
 import { useNavigate } from 'react-router-dom';
+import { HiOutlineBookmarkSlash, HiOutlineCheckCircle, HiOutlineMinusCircle, HiOutlineShieldCheck, HiOutlineUsers } from 'react-icons/hi2'
 
 const ROLES: Role[] = ['admin', 'moderator', 'user', 'guest'];
 
@@ -14,7 +15,7 @@ const STAT_CARDS = [
     getSub: (u: typeof MOCK_USERS) => `↑ ${u.filter(x => x.status === 'active').length} active`,
     subColor: 'text-primary',
     iconBg: 'bg-primary/10',
-    icon: <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>,
+    icon: <HiOutlineUsers className="h-5 w-5 text-primary" />
   },
   {
     label: 'Active',
@@ -22,7 +23,7 @@ const STAT_CARDS = [
     getSub: (u: typeof MOCK_USERS) => `${u.filter(x => x.status === 'pending').length} pending`,
     subColor: 'text-amber-400',
     iconBg: 'bg-blue-500/10',
-    icon: <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    icon: <HiOutlineCheckCircle className="w-5 h-5 text-blue-400" />
   },
   {
     label: 'Roles',
@@ -30,7 +31,7 @@ const STAT_CARDS = [
     getSub: () => 'admin · mod · user · guest',
     subColor: 'text-muted-foreground',
     iconBg: 'bg-purple-500/10',
-    icon: <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
+    icon: <HiOutlineShieldCheck className="w-5 h-5 text-purple-400" />
   },
   {
     label: 'Suspended',
@@ -38,8 +39,8 @@ const STAT_CARDS = [
     getSub: () => 'accounts restricted',
     subColor: 'text-muted-foreground',
     iconBg: 'bg-destructive/10',
-    icon: <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>,
-  },
+    icon: <HiOutlineMinusCircle className="w-5 h-5 text-destructive" />
+	}
 ];
 
 const JOB_STATUS_STYLES = {
@@ -186,9 +187,7 @@ export const DashboardPage = () => {
                     <td className="px-6 py-3.5 max-w-[220px]">
                       <div className="flex items-center gap-2">
                         {job.status === 'flagged' && (
-                          <svg className="w-3.5 h-3.5 text-destructive shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l1.664 1.664M21 21l-1.5-1.5m-5.485-1.242L12 17.25 4.5 21V8.742m.164-4.078a2.15 2.15 0 011.743-1.342 48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185V19.5M4.664 4.664L19.5 19.5" />
-                          </svg>
+                          <HiOutlineBookmarkSlash className="w-3.5 h-3.5 text-destructive shrink-0" />
                         )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{job.title}</p>

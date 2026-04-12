@@ -3,6 +3,7 @@ import { MOCK_ROLES } from '../../lib/mockData';
 import { ROLE_META, ROLE_PERMISSIONS } from '../../lib/permissions';
 import { RoleBadge } from '../../components/ui/RoleBadge';
 import type { Role, Permission } from '../../types';
+import { HiOutlineCheck, HiOutlineXMark } from 'react-icons/hi2';
 
 const PERMISSION_GROUPS: { label: string; permissions: Permission[] }[] = [
   { label: 'Users',   permissions: ['users:read','users:create','users:edit','users:delete'] },
@@ -82,8 +83,8 @@ export const RolesPage = () => {
                       <div key={perm} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs ${granted ? 'bg-secondary text-foreground' : 'text-muted-foreground/30'}`}>
                         <span className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${granted ? 'bg-primary/10 border border-primary/30' : 'bg-background border border-border'}`}>
                           {granted
-                            ? <svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                            : <svg className="w-2.5 h-2.5 text-muted-foreground/30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            ? <HiOutlineCheck className="w-2.5 h-2.5 text-primary" />
+                            : <HiOutlineXMark className="w-2.5 h-2.5 text-muted-foreground/30" />
                           }
                         </span>
                         {PERMISSION_LABELS[perm]}
