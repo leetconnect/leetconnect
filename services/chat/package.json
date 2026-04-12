@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@leetconnect/shared": "1.0.0",
-    "@prisma/client": "^6.5.0",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
@@ -27,7 +28,7 @@
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.4.0",
-    "prisma": "^6.5.0",
+    "prisma": "^7.6.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }

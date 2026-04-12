@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // this variable is already set by docker compose :D
+  // url      = env("DATABASE_URL") // this variable is already set by docker compose :D
 }
 
 model User {
