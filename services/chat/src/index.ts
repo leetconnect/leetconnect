@@ -1,7 +1,7 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
-import http				from 'http';
-import path				from 'path';
+import https			from 'https';
+import fs				from 'fs';
 import { Server }		from 'socket.io';
 
 import health_routes	from './routes/route.health';
@@ -21,8 +21,16 @@ dotenv.config({ path: '../../.env', quiet: true});
 
 const PORT = process.env.CHAT_DB_PORT || 3003;
 
+console.log('>>>>>>>>>', process.env.SSL_KEY_PATH);
+console.log('>>>>>>>>>', process.env.SSL_CERT_PATH);
+
+const sslOptions = {
+	key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+	cert: fs.readFileSync(process.env.SSL_CERT_PATH as string),
+};
+
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer(sslOptions, app);
 
 const io = new Server(server, {
 	cors: { origin: '*' },
