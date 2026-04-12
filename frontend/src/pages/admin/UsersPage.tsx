@@ -4,6 +4,7 @@ import { RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
 import { MOCK_USERS } from '../../lib/mockData';
 import { ROLE_META } from '../../lib/permissions';
 import type { User, Role } from '../../types';
+import { HiOutlineMagnifyingGlass, HiOutlineUserMinus } from 'react-icons/hi2';
 
 const ALL_ROLES: Role[] = ['admin', 'moderator', 'user', 'guest'];
 
@@ -11,7 +12,7 @@ export const UsersPage = () => {
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Number | null>(null);
 
   const filtered = users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
@@ -19,15 +20,15 @@ export const UsersPage = () => {
     return matchSearch && matchRole;
   });
 
-  function handleRoleChange(userId: string, newRole: Role) {
+  function handleRoleChange(userId: Number, newRole: Role) {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
   }
-  function handleStatusToggle(userId: string) {
+  function handleStatusToggle(userId: Number) {
     setUsers(prev => prev.map(u =>
       u.id === userId ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' } : u
     ));
   }
-  function handleDelete(userId: string) {
+  function handleDelete(userId: Number) {
     setUsers(prev => prev.filter(u => u.id !== userId));
     setDeleteConfirm(null);
   }
@@ -66,9 +67,7 @@ export const UsersPage = () => {
       
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
+          <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search users..."
@@ -154,12 +153,8 @@ export const UsersPage = () => {
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(user.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          
-													<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-4 h-4">
-														<path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-													</svg>
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                          <HiOutlineUserMinus className='w-4 h-4' />
 
                         </button>
                       )}
