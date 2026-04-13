@@ -12,6 +12,7 @@ COPY services/marketplace/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
 COPY services/marketplace/ ./
+RUN npx prisma generate
 RUN npm run build
 
 EXPOSE 3002
