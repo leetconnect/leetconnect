@@ -8,7 +8,25 @@ import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
 import type { Conversation } from "./ConverLayer";
 
-const CURRENT_USER_ID = new URLSearchParams(window.location.search).get('user_id') ?? ''; // TODO: replace with auth user
+function getUserIdFromToken(): string {
+	const token = localStorage.getItem('token');
+	// console.log('>>>>>>> token:', token);
+	if (!token) return '';
+	try {
+		const parts = token.split('.');
+		// console.log('>>>>>>> parts:', parts);
+		if (!parts[1]) return '';
+		// console.log('>>>>>>> parts[1]:', parts[1]);
+		const payload = JSON.parse(atob(parts[1]));
+		// console.log('>>>>>>> payload:', payload);
+		// console.log('>>>>>>> payload.userId:', payload.userId);
+		return payload.userId ?? '';
+	} catch {
+		return '';
+	}
+}
+
+const CURRENT_USER_ID = getUserIdFromToken();
 
 export default function Messages() {
 	const [conversations, setConversations] = useState<Conversation[]>([]);

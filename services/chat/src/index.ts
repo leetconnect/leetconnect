@@ -15,6 +15,12 @@ import prisma			from './config/config.database';
 import error_handler	from './middleware/error.handler';
 import { setup_sockets } from './sockets/socket.handler';
 
+import {
+	initEventBus, subscribeToEvents,
+	AUTH_EVENTS } from '@leetconnect/shared';
+
+import { authMiddleware } from '@leetconnect/shared';
+
 dotenv.config({ path: '../../.env', quiet: true});
 
 // console.log(process.env);
@@ -40,10 +46,12 @@ app.use(express.json());
 app.set('io', io);
 
 app.use('/api/chat', health_routes);
-app.use('/api/chat/convers', convers_routes);
+
+app.use(authMiddleware);
+app.use('/api/chat/convers', 			  convers_routes);
 app.use('/api/chat/convers/:id/messages', message_routes);
-app.use('/api/notifs', notif_routes);
-app.use('/api/friend/requests', friends_routes);
+app.use('/api/friend/requests', 		  friends_routes);
+app.use('/api/notifs', 					  notif_routes);
 
 app.use(error_handler);
 
@@ -52,6 +60,17 @@ start_chat_server();
 
 async function start_chat_server() {
 	try {
+		initEventBus();
+		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async (channel, message: any) => {
+			const {id, email, username, role} = message.data;
+
+			await prisma.user.upsert({
+				where:  {id: id },
+				update: {email, username, role},
+				create: {id, email, username, role}
+			});
+			console.log(`user synced to chat_db: [${id}](${username})`);
+		});
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
 		});
