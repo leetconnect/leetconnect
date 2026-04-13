@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import { Theme } from './components/Theme';
+import ContextProvider from './context/context';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -38,7 +39,10 @@ ReactDOM.createRoot(rootElement).render(
     <ErrorBoundary>
       <BrowserRouter>
         <Theme>
-          <App />
+          <ContextProvider>
+             <App />
+          </ContextProvider>
+         
         </Theme>
       </BrowserRouter>
     </ErrorBoundary>
