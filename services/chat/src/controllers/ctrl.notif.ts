@@ -20,7 +20,7 @@ function parse_notif_id(id_param: string | undefined): number {
 
 export async function create(req: Request , res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.params.user_id as string);
+		const user_id = parse_user_id(req.user?.userId);
 		const {type, title, body} = req.body;
 		const notif = await prisma.notification.create({
 			data: {
@@ -41,7 +41,7 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	// console.log('List user notifications');
 	// res.send(`GET: /api/chat/notifs endpoint`);
 	try {
-		const user_id = parse_user_id(req.params.user_id as string);
+		const user_id = parse_user_id(req.user?.userId);
 		const notifs  = await prisma.notification.findMany({
 			where: { user_id },
 			orderBy: { created_at: 'desc'},
@@ -71,7 +71,7 @@ export async function read_all(req: Request, res: Response, next: NextFunction) 
 	// console.log('Mark all notifications as read');
 	// res.send(`PATCH: /api/chat/notifs/read-all endpoint`);
 	try {
-		const user_id = parse_user_id(req.params.user_id as string);
+		const user_id = parse_user_id(req.user?.userId);
 		await prisma.notification.updateMany({
 			where: {user_id, is_read: false},
 			data :{is_read: true},

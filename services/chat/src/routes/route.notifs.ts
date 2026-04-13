@@ -5,10 +5,10 @@ const router = Router();
 
 // http://localhost:1337/api/chat/notifs
 
-router.get('/:user_id', notif_ctrl.list);
-router.post('/:user_id', notif_ctrl.create);
+router.get('/', notif_ctrl.list);
+router.post('/', notif_ctrl.create);
 router.patch('/:id/read', notif_ctrl.read);
-router.patch('/:user_id/read-all', notif_ctrl.read_all);
+router.patch('/read-all', notif_ctrl.read_all);
 
 // router.get('/', (req, res) => {
 // 	console.log('GET: api/chat/notifs endpoint');

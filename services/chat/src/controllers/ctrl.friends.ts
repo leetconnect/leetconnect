@@ -22,8 +22,6 @@ function check_pending(status: string): void {
 }
 
 export async function send(req: Request, res: Response, next: NextFunction) {
-	// console.log('Send a friend request');
-	// res.send(`POST: api/friend/requests endpoint`);
 	try {
 		const sender_id   = parse_user_id(req.body.sender_id, 'sender_id');
 		const receiver_id = parse_user_id(req.body.receiver_id, 'receiver_id');
@@ -67,9 +65,6 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function accept(req: Request, res: Response, next: NextFunction) {
-	// const id = req.params.id;
-	// console.log('Accept an incoming friend request');
-	// res.send(`PATCH: api/friend/requests/${id}/accept endpoint`);
 	try {
 		const request_id = parse_int_id(req.params.id, 'request_id');
 		const user_id	 = parse_user_id(req.body.receiver_id, 'receiver_id');
@@ -96,9 +91,6 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function reject(req: Request, res: Response, next: NextFunction) {
-	// const id = req.params.id;
-	// console.log('Reject an incoming friend request');
-	// res.send(`PATCH: api/friend/requests/${id}/reject endpoint`);
 	try {
 		const request_id = parse_int_id(req.params.id, 'request_id');
 		const user_id	 = parse_user_id(req.body.receiver_id, 'user_id');
@@ -125,11 +117,8 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function list_incoming(req: Request, res: Response, next: NextFunction) {
-	// const user_id = req.params.user_id;
-	// console.log('List all user incoming friend requests');
-	// res.send(`GET: api/friend/requests/incoming/${user_id} endpoint`);
 	try {
-		const user_id = parse_user_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const reguest = await prisma.friendRequest.findMany({
 			where: {
 				receiver_id: user_id,
@@ -144,11 +133,8 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 }
 
 export async function list_outgoing(req: Request, res: Response, next: NextFunction) {
-	// const user_id = req.params.user_id;
-	// console.log('List all user outgoing friend requests');
-	// res.send(`GET: api/friend/requests/outgoing/${user_id} endpoint`);
 	try {
-		const user_id = parse_user_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const reguest = await prisma.friendRequest.findMany({
 			where: {
 				sender_id: user_id,
@@ -164,7 +150,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.params.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const request = await prisma.friendRequest.findMany({
 			where: {
 				status: 'ACCEPTED',
@@ -184,7 +170,7 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 export async function cancel(req: Request, res: Response, next: NextFunction) {
 	try {
 		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 		const request	 = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
 		});
@@ -206,7 +192,7 @@ export async function cancel(req: Request, res: Response, next: NextFunction) {
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	= parse_user_id(req.params.user_id, 'user_id');
+		const user_id	= parse_user_id(req.user?.userId, 'user_id');
 		const friend_id = parse_user_id(req.body.friend_id, 'friend_id');
 
 		if (user_id === friend_id)
@@ -220,9 +206,6 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 					{sender_id: friend_id, receiver_id: user_id}
 				]
 			},
-			// select: {
-			// 	id: true
-			// }
 		});
 		console.log('>>>>>', friendship);
 		if (!friendship)
