@@ -20,7 +20,7 @@ export default function ConversPanel({
 	const [show_modal, setShowModal] = useState(false);
 
 	return (
-		<div className="w-full sm:w-80 border-r border-border flex flex-col">
+		<div className="w-full sm:w-80 h-full border-r border-border flex flex-col">
 			<div className="px-4 py-5">
 				<h2 className="text-foreground font-semibold text-center">Conversations</h2>
 			</div>
@@ -37,10 +37,10 @@ export default function ConversPanel({
 				))}
 			</div>
 
-			<div className="p-3 border-t border-border">
+			<div className="p-4">
 				<button
 					onClick={() => setShowModal(true)}
-					className="w-full py-2 px-4 rounded-md bg-primary text-primary-foreground
+					className="w-full h-12 py-3 px-4 rounded-md bg-primary text-primary-foreground
 							   text-sm font-medium hover:bg-primary/90 transition-colors"
 				>
 					+ Create Group

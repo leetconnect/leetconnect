@@ -10,13 +10,16 @@ export function setup_sockets(io: Server) {
 		const token = socket.handshake.auth?.token
 			|| socket.handshake.headers?.authorization?.split(' ')[1];
 
-		if(!token) return next(new Error('authentication required'));
+		if(!token) {
+			return next(new Error('ws authentication required'));
+		}
 		try {
 			const decoded = jwt.verify(token, pub_key, {
 				algorithms: ['RS256']
 			}) as unknown as JwtPayload;
 
 			socket.data.user = decoded;
+
 			next();
 		} catch (err) {
 			next(new Error('invalid or expired token'));
@@ -25,23 +28,27 @@ export function setup_sockets(io: Server) {
 
 	io.on('connection', (socket: Socket) => {
 		const userId = socket.data.user;
-
-		console.log(`socket connected: ${socket.id} (user: ${userId})`);
+		// console.log(`socket connected: ${socket.id} (user: ${userId})`);
 		socket.join(`user:${userId}`);
 
 		socket.on('join_convers', (convers_id: number) => {
 			// TODO: verify user is a member of this conversation
 			const room = `convers:${convers_id}`;
 			socket.join(room);
-			console.log(`socket ${socket.id} joined room ${room}`);
+			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
+			// console.log(`socket ${socket.id} joined room ${room}`);
 		});
 		socket.on('leave_covers', (convers_id: number) => {
 			const room = `convers:${convers_id}`;
 			socket.leave(room);
-			console.log(`socket ${socket.id} left room ${room}`);
-		})
-		socket.on('disconnect', (reason: string) => {
-			console.log(`socket disconnected: ${socket.id} (${reason})`);
+			// console.log(`socket ${socket.id} left room ${room}`);
+			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
 		});
+		socket.on('disconnect', (reason: string) => {
+			// console.log(`socket disconnected: ${socket.id} (${reason})`);
+		});
+		// socket.onAny((event, ...args) => {
+        //     console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
+        // });
 	});
 }

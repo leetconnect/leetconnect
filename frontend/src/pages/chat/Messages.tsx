@@ -109,26 +109,6 @@ export default function Messages() {
 			.catch(console.error);
 	}, [active_id, CURRENT_USER_ID]);
 
-	// join room and listen for new messages
-	useEffect(() => {
-		if (!active_id) return;
-
-		const socket = getSocket();
-		socket.emit('join_convers', active_id);
-
-		const handler = (msg: Message) => {
-			if (msg.convers_id === active_id && msg.sender_id !== CURRENT_USER_ID) {
-				setMessages((prev) => [...prev, msg]);
-			}
-		};
-		socket.on('new_message', handler);
-
-		return () => {
-			socket.emit('leave_covers', active_id);
-			socket.off('new_message', handler);
-		};
-	}, [active_id, CURRENT_USER_ID]);
-
 	const loadMore = useCallback(async () => {
 		if (!active_id || !next_cursor || loading_more) return;
 		setLoading_more(true);
