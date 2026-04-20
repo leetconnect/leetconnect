@@ -31,13 +31,17 @@ export default function ChatBox({
 		if (is_initial_load.current) {
 			bottom_ref.current?.scrollIntoView();
 			is_initial_load.current = false;
-		} else {
-			const ref = scroll_ref.current;
-			if (ref && ref.scrollHeight - ref.scrollTop - ref.clientHeight < 150) {
-				bottom_ref.current?.scrollIntoView({ behavior: 'smooth' });
-			}
+			return;
 		}
-	}, [messages]);
+		const last = messages[messages.length - 1];
+		const ref = scroll_ref.current;
+		const near_bottom = ref
+			? ref.scrollHeight - ref.scrollTop - ref.clientHeight < 150
+			: false;
+		if (last?.sender_id === curr_user || near_bottom) {
+			bottom_ref.current?.scrollIntoView({ behavior: 'smooth' });
+		}
+	}, [messages, curr_user]);
 
 	useEffect(() => {
 		is_initial_load.current = true;
