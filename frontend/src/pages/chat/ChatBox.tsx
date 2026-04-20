@@ -15,11 +15,13 @@ interface ChatBoxProp {
 
 	onSendMessage: 	(content: string) => void;
 	onLoadMore:		() => void;
+	onDeleteMessage: (msg_id: number) => void;
+	onBack:			() => void;
 }
 
 export default function ChatBox({
 	convers_name, convers_avatar, convers_username, messages, curr_user,
-	onSendMessage, onLoadMore, has_more, loading_more,
+	onSendMessage, onLoadMore, has_more, loading_more, onDeleteMessage, onBack
 }: ChatBoxProp) {
 	const bottom_ref = useRef<HTMLDivElement>(null);
 	const scroll_ref = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ export default function ChatBox({
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0">
-			<ChatHeader name={convers_name} avatar={convers_avatar} is_online={true} username={convers_username}/>
+			<ChatHeader name={convers_name} avatar={convers_avatar} is_online={true} username={convers_username} onBack={onBack}/>
 			<div ref={scroll_ref} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-4">
 				{loading_more && (
 					<div className="flex justify-center py-3">
@@ -70,7 +72,12 @@ export default function ChatBox({
 					</div>
 				)}
 				{messages.map((msg) => (
-					<MessageBubble key={msg.id} message={msg} curr_user={curr_user}/>
+					<MessageBubble
+						key={msg.id}
+						message={msg}
+						curr_user={curr_user}
+						onDelete={onDeleteMessage}
+					/>
 				))}
 				<div ref={bottom_ref} />
 			</div>

@@ -110,13 +110,19 @@ interface PaginatedMessages {
 	next_cursor:	number | null;
 }
 
+interface CreateConversPayload {
+    type: 'Direct' | 'Group';
+    name?: string;
+    member_ids: string[];
+}
+
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
-	listConversations: (user_id: string) =>
-		api<Conversation[]>(`/chat/convers?user_id=${user_id}`),
+	listConversations: () =>
+		api<Conversation[]>(`/chat/convers`),
 
-	getConversation: (convers_id: number, user_id: string) =>
-		api<Conversation>(`/chat/convers/${convers_id}?user_id=${user_id}`),
+	getConversation: (convers_id: number) =>
+		api<Conversation>(`/chat/convers/${convers_id}`),
 
 	leaveConversation: (convers_id: number, user_id: string) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}`, {
@@ -125,30 +131,39 @@ export const chatApi = {
 		}),
 
 	// ---------------------- Messages ----------------------
-	listMessages: (convers_id: number, user_id: string, limit = 20, cursor?: number) => {
-		let url = `/chat/convers/${convers_id}/messages?user_id=${user_id}&limit=${limit}`;
+	listMessages: (convers_id: number, limit = 20, cursor?: number) => {
+		let url = `/chat/convers/${convers_id}/messages?limit=${limit}`;
 		if (cursor)
             url += `&cursor=${cursor}`;
 		return api<PaginatedMessages>(url);
 	},
 
-	sendMessage: (convers_id: number, user_id: string, content: string) =>
+	sendMessage: (convers_id: number, content: string) =>
 		api<Message>(`/chat/convers/${convers_id}/messages`, {
 			method: 'POST',
-			body: { user_id: user_id, content },
+			body: { content: content },
 		}),
 
-	getMessage: (convers_id: number, user_id: string, msg_id: number) =>
+	getMessage: (convers_id: number, msg_id: number) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
-			body: { user_id: user_id, msg_id: msg_id },
+			body: { msg_id: msg_id },
 		}),
 
-	deleteMessage: (convers_id: number, user_id: string, msg_id: number) =>
+	deleteMessage: (convers_id: number, msg_id: number) =>
 		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
-			method: 'DELETE',
-			body: { user_id: user_id, msg_id: msg_id },
+			method: 'DELETE'
 		}),
 
+	// ---------------------- Convers ----------------------
+        createConversation: (data: CreateConversPayload) =>
+        api<Conversation>('/chat/convers', {
+            method: 'POST',
+            body: {
+                type: data.type,
+                name: data.name,
+                member_ids: data.member_ids,
+            },
+        }),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
 };

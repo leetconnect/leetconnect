@@ -35,13 +35,13 @@ export default function ConversLayer({
 	convers, is_active, curr_user, onClick
 }: ConversLayerProp) {
 	const display_name = convers.type === 'Direct'
-		? convers.members.find((m) => m.user_id !== curr_user)?.user.username ?? 'Unknown'
+		? convers.members?.find((m) => m.user_id !== curr_user)?.user?.username ?? 'Unknown'
 		: convers.name ?? 'Unnamed Group';
 	const display_avatar = convers.type === 'Direct'
-		? convers.members.find((m) => m.user_id !== curr_user)?.user.avatar
+		? convers.members?.find((m) => m.user_id !== curr_user)?.user?.avatar
 		: undefined;
 
-	const last_msg = convers.messages[0];
+	const last_msg = convers.messages?.[0];
 	const preview = last_msg?.content ?? '';
 
 	const timestamp = new Date(convers.updated_at).toLocaleTimeString([], {
