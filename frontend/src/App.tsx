@@ -4,7 +4,7 @@ import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import About from './pages/About';
-import Login from './pages/auth/Login';
+// import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/market/Dashboard';
 import Messages from './pages/chat/Messages';
@@ -21,8 +21,8 @@ export default function App() {
       <Routes>
         {/*Public routes*/}
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* <Route path="/auth/sign-in" element={<Login />} /> */}
+        <Route path="/auth/sign-up" element={<Register />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
