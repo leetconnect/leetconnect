@@ -6,6 +6,13 @@ const API_BASE = '/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+// storing access token in this variable that will live in RAM so its not accessable by XSS attack :3
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+    _accessToken = token;
+};
+
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
     method?: HttpMethod;
@@ -16,7 +23,10 @@ interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
 export interface User {
     id: string;
     email: string;
-    name: string;
+    username: string; // Used 'username' instead of 'name'
+    firstName: string;
+    lastName: string;
+    role: 'CLIENT' | 'FREELANCER' | 'ADMIN';
 }
 
 export interface Job {
@@ -48,10 +58,14 @@ export interface LoginRequest {
     password: string;
 }
 
+// what the frontend sends during register 
 export interface RegisterRequest {
     email: string;
+    username: string;
+    firstName: string;
+    lastName: string;
     password: string;
-    name: string;
+    role: 'CLIENT' | 'FREELANCER';
 }
 
 export interface AuthResponse {
@@ -60,16 +74,16 @@ export interface AuthResponse {
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-    const token = localStorage.getItem('token');
     const { body, headers: extraHeaders, ...restOptions } = options;
 
+    // used httpOnly cookie instead of localstorage
     const config : RequestInit = {
         ...restOptions,
+        credentials: 'include', 
         headers: {
             'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(_accessToken && { Authorization: `Bearer ${_accessToken}` }),
             ...extraHeaders,
-
         },
         // Stringify body if it's an object
         ...(body !== undefined && { body: JSON.stringify(body) }),
@@ -77,6 +91,20 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    // If token expired (401) refresh to get a new one
+    if (res.status === 401 && !path.includes('/auth/login')) {
+        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, { 
+            method: 'POST', 
+            credentials: 'include' 
+        });
+
+        if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setAccessToken(data.accessToken);
+            // Retry the original request with the new token
+            return api<T>(path, options);
+        }
+    }
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
