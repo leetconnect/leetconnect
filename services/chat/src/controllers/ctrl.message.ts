@@ -26,10 +26,8 @@ async function assert_membership(convers_id: number, user_id: string) {
 }
 
 export async function list(req: Request, res: Response, next: NextFunction) {
-	// console.log('List user messages');
-	// res.send(`GET: convers/${req.params.id}/messages endpoint`);
 	try {
-		const user_id	 = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
@@ -72,10 +70,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function send(req: Request, res: Response, next: NextFunction) {
-	// console.log('Send a message');
-	// res.send(`POST: convers/${req.params.id}/messages endpoint`);
 	try {
-		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
@@ -121,10 +117,8 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function get_one(req: Request, res: Response, next: NextFunction) {
-	// console.log('Get a single message');
-	// res.send(`GET: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
 	try {
-		const user_id	 = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
 
@@ -159,12 +153,10 @@ export async function get_one(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
-	// console.log('Delete a single message');
-	// res.send(`DELETE: convers/${req.params.id}/messages/${req.params.msg_id} endpoint`);
 	try {
-		const user_id	 = parse_user_id(req.body.user_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
-		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
+		const msg_id	 = parse_int_id(req.params.msg_id, 'msg_id');
 
 		await assert_membership(convers_id, user_id);
 
@@ -175,14 +167,20 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 			},
 			select: {
 				id: true,
-				content: true,
 				sender_id: true
 			}
 		});
 		if (!message)
 			throw new err.NotFoundError('message not found');
+		if (message.sender_id !== user_id)
+			throw new err.ForbiddenError('can only delete your own messages');
 
 		await prisma.message.delete({where: {id: msg_id}});
+
+		const io = req.app.get('io');
+		io.to(`covers:${convers_id}`).emit('delete_message', {
+			id: msg_id, convers_id
+		});
 
 		res.status(200).json({message: 'message deleted'});
 	} catch (err) {

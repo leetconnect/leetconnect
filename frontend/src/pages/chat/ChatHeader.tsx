@@ -1,20 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
-import { Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 
 interface ChatHeaderProp {
 	name: 		string;
 	avatar: 	string;
 	is_online: 	boolean;
 	username?:	string | undefined;
+	onBack:		() => void;
 }
 
-export default function ChatHeader({name, avatar, is_online = false, username}: ChatHeaderProp) {
+export default function ChatHeader({name, avatar, is_online = false, username, onBack}: ChatHeaderProp) {
 	const navigate = useNavigate();
 
 	return(
 		<div className="flex items-center justify-between px-6 py-4 border-b border-border">
 			<div className="flex items-center gap-3">
+				<button
+					onClick={onBack}
+					className="sm:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground
+							   hover:bg-secondary rounded-lg transition-colors"
+				>
+					<ArrowLeft size={18} />
+				</button>
 				<div
 					className={username ? "cursor-pointer" : ""}
 					onClick={() => username && navigate(`/profile/${username}`)}

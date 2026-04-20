@@ -30,10 +30,8 @@ function ensure_unique_ids(ids: string[]): string[] {
 }
 
 export async function list(req: Request, res: Response, next: NextFunction) {
-	// console.log('List user conversations');
-	// res.send('GET: /convers/ endpoint');
 	try {
-		const curr_user = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const curr_user = parse_user_id(req.user?.userId, 'user_id');
 		const convers = await prisma.convers.findMany({
 			where: {
 				members: {
@@ -72,7 +70,7 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function create(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.body.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const type = parse_type(req.body.type);
 
 		if (!Array.isArray(req.body.member_ids))
@@ -86,11 +84,11 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 		if (type === 'Direct' && member_ids.length !== 2)
 			throw new err.BadRequestError('Direct conversation must have exactly 2 members');
 
-		if (type === 'Group' && member_ids.length < 2)
+		if (type === 'Group' && member_ids.length <= 2)
 			throw new err.BadRequestError('Group conversation must have at least 2 members');
 
 		if (type === 'Group' && (!req.body.name || !req.body.name.trim()))
-			throw new err.BadRequestError('name is required for Group conversation');
+			throw new err.BadRequestError('Name is required for Group conversation');
 
 		const users = await prisma.user.findMany({
 			where: { id: { in: member_ids } },
@@ -148,7 +146,22 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 				include: {
 					members: {
 						select: {
-							user_id: true, joined_at: true
+							user_id: true,
+							user: {
+								select: {
+									username: true,
+									avatar: true
+								}
+							}
+						}
+					},
+					messages: {
+						orderBy: {created_at: 'desc'},
+						take: 1,
+						select: {
+							content: true,
+							sender_id: true,
+							created_at: true
 						}
 					}
 				}
@@ -162,10 +175,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function get(req: Request, res: Response, next: NextFunction) {
-	// console.log('Get conversation details');
-	// res.send(`GET: /convers/${req.params.id} endpoint`);
 	try {
-		const user_id = parse_user_id(req.query.user_id ?? req.body.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		const convers = await prisma.convers.findFirst({
@@ -212,10 +223,8 @@ async function assert_membership(convers_id: number, user_id: string) {
 }
 
 export async function update(req: Request, res: Response, next: NextFunction) {
-	// console.log('Update conversation details (name, etc.)');
-	// res.send(`PUT: /convers/${req.params.id} endpoint`);
 	try {
-		const user_id = parse_user_id(req.body.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		await assert_membership(convers_id, user_id);
@@ -248,10 +257,8 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
-	// console.log('Soft delete / leave conversation');
-	// res.send(`DELETE: /convers/${req.params.id} endpoint`);
 	try {
-		const user_id = parse_user_id(req.body.user_id, 'user_id');
+		const user_id = parse_user_id(req.user?.userId, 'user_id');
 		const convers_id = parse_int_id(req.params.id, 'convers_id');
 
 		const membership = await prisma.conversMember.findFirst({
