@@ -49,3 +49,6 @@ services/auth/.env
 certs/
 /tree.txt
 /tests.md
+
+migrations/
+*.md
