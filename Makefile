@@ -1,31 +1,31 @@
-up: certs
+up:
 	docker compose up --build
 
-up-d: certs
+up-d:
 	docker compose up --build -d
 
 down:
 	docker compose down
 
-re: clean certs
+re: clean
 	docker compose up --build -d
 
-certs:
-	@if [ ! -d "./certs" ]; then \
-		echo "gen local SSL certs..."; \
-		chmod +x scripts/gen-certs.sh; \
-		./scripts/gen-certs.sh; \
-	else \
-		echo "certs already exist."; \
-	fi
+# certs:
+# 	@if [ ! -d "./certs" ]; then \
+# 		echo "gen local SSL certs..."; \
+# 		chmod +x scripts/gen-certs.sh; \
+# 		./scripts/gen-certs.sh; \
+# 	else \
+# 		echo "certs already exist."; \
+# 	fi
 
 clean:
 	docker compose down -v
-	rm -rf certs
+	rm -rf
 
 fclean:
 	docker compose down -v --rmi all
-	rm -rf certs
+	rm -rf
 
 logs:
 	docker compose logs -f

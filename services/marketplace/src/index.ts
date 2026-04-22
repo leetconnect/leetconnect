@@ -7,16 +7,16 @@ import sequelize from './config/database';
 import healthRoutes from './routes/health';
 import { initEventBus, closeEventBus } from '@leetconnect/shared';
 import { errorHandler } from '@leetconnect/shared';
-import fs from 'fs';
-import https from 'https';
+// import fs from 'fs';
+// import https from 'https';
 
 const app = express();
 const PORT =  3002;
 
-const sslOptions = {
-    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-};
+// const sslOptions = {
+//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+// };
 
 
 // middleware
@@ -39,7 +39,7 @@ async function start() {
     await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
     console.log('marketplace models synced');
     initEventBus(process.env.REDIS_URL);
-    https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`marketplace service running on port ${PORT}`);
     });
   } catch (err) {
