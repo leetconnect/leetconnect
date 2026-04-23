@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
+import { notify } from '../lib/notify';
 
 function parse_user_id(value: unknown, label: string): string {
 	const val = typeof value === 'string' ? value.trim() : '';
@@ -64,6 +65,16 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 			}
 		});
 		// TODO: create a notif
+		const sender_info = await prisma.user.findUnique({
+			where: {id: sender_id}, select: {username: true},
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: receiver_id,
+			type: 'FRIEND_REQ',
+			title: 'New Friend Request',
+			body: `${sender_info?.username} wants to connect`
+		});
 		res.status(201).json(request);
 	} catch (err) {
 		next(err);
@@ -90,6 +101,17 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 			data: {status: 'ACCEPTED'}
 		});
 		// TODO: send notif
+		const me = await prisma.user.findUnique({
+			where: {id: user_id}, select: {username: true}
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: request.sender_id,
+			type: 'FRIEND_REQ',
+			title: 'Friend Request Accepted',
+			body: `${me?.username} accepted your request`
+		});
+
 		res.status(200).json(updated);
 	} catch (err) {
 		next(err);

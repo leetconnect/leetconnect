@@ -26,19 +26,25 @@ export default function ChatBox({
 	const bottom_ref = useRef<HTMLDivElement>(null);
 	const scroll_ref = useRef<HTMLDivElement>(null);
 	const is_initial_load = useRef(true);
+	const last_id_ref = useRef<number | null>(null);
 
 	useEffect(() => {
+		const last = messages[messages.length - 1];
 		if (is_initial_load.current) {
 			bottom_ref.current?.scrollIntoView();
 			is_initial_load.current = false;
+			last_id_ref.current = last?.id ?? null;
 			return;
 		}
-		const last = messages[messages.length - 1];
+		const is_new_tail = last && last.id !== last_id_ref.current;
+		last_id_ref.current = last?.id ?? null;
+		if (!is_new_tail) return;
+
 		const ref = scroll_ref.current;
 		const near_bottom = ref
 			? ref.scrollHeight - ref.scrollTop - ref.clientHeight < 150
 			: false;
-		if (last?.sender_id === curr_user || near_bottom) {
+		if (last.sender_id === curr_user || near_bottom) {
 			bottom_ref.current?.scrollIntoView({ behavior: 'smooth' });
 		}
 	}, [messages, curr_user]);

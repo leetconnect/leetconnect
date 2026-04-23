@@ -23,10 +23,17 @@ interface MessageProp {
 export default function MessageLayer({message, curr_user, onDelete}: MessageProp) {
 	const is_mine = message.sender_id === curr_user;
 	const [confirming, setConfirming] = useState(false);
-	const time = new Date(message.created_at).toLocaleTimeString([], {
+	const created = new Date(message.created_at);
+	const is_today = created.toDateString() === new Date().toDateString();
+	const time_part = created.toLocaleTimeString([], {
 		hour: "2-digit",
 		minute: "2-digit"
 	});
+	const date_part = created.toLocaleDateString([], {
+		month: "short",
+		day: "numeric"
+	});
+	const time = is_today ? time_part : `${date_part}, ${time_part}`;
 
 	if (is_mine) {
 		return (
@@ -61,7 +68,7 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 						)}
 					</div>
 
-					<div className={`bg-primary/90 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
+					<div className={`w-fit bg-primary/90 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
 						<p className="text-sm leading-relaxed">{message.content}</p>
 					</div>
 				</div>
@@ -74,7 +81,7 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 		<div className="flex gap-3 mb-4">
 			<Avatar name={message.sender?.username} image={message.sender?.avatar} size="sm" />
 			<div className="max-w-md">
-				<div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
+				<div className="w-fit bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
 					<p className="text-sm text-foreground leading-relaxed">
 						{message.content}
 					</p>
