@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
+import { notify, type NotifType } from '../lib/notify';
+
+const NOTIF_TYPES: readonly NotifType[] = ['MESSAGE', 'FRIEND_REQ', 'SYSTEM'];
 
 function parse_user_id(id_param: string | undefined): string {
 	const user_id = id_param?.trim();
@@ -18,18 +21,34 @@ function parse_notif_id(id_param: string | undefined): number {
 	return notif_id;
 }
 
+function parse_notif_type(value: unknown): NotifType {
+	if (typeof value !== 'string' || !NOTIF_TYPES.includes(value as NotifType))
+		throw new err.BadRequestError('invalid type');
+	return value as NotifType;
+}
+
+function parse_str(value: unknown, label: string, max: number): string {
+	if (typeof value !== 'string' || !value.trim())
+		throw new err.BadRequestError(`Invalid ${label}`);
+	if (value.length > max)
+		throw new err.BadRequestError(`${label} too long`);
+	return value.trim();
+}
+
 export async function create(req: Request , res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.user?.userId);
-		const {type, title, body} = req.body;
-		const notif = await prisma.notification.create({
-			data: {
-				user_id: user_id,
-				type: type,
-				title: title,
-				body: body,
-				is_read: false,
-			}
+		const receiver_id = parse_user_id(req.body.receiver_id);
+		const type  = parse_notif_type(req.body.type);
+		const title = parse_str(req.body.title, 'title', 120);
+
+		const io = req.app.get('io');
+		const notif = await notify(io, {
+			user_id: receiver_id,
+			type,
+			title,
+			...(req.body.body != null && {
+				body: parse_str(req.body.body, 'body', 500)
+			}),
 		});
 		res.json(notif);
 	} catch (err) {
@@ -38,8 +57,6 @@ export async function create(req: Request , res: Response, next: NextFunction) {
 }
 
 export async function list(req: Request, res: Response, next: NextFunction) {
-	// console.log('List user notifications');
-	// res.send(`GET: /api/chat/notifs endpoint`);
 	try {
 		const user_id = parse_user_id(req.user?.userId);
 		const notifs  = await prisma.notification.findMany({
@@ -53,30 +70,32 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function read(req: Request, res: Response, next: NextFunction) {
-	// console.log('Mark a notification as read');
-	// res.send(`PATCH: /api/chat/notifs/${req.params.id}/read endpoint`);
 	try {
 		const notif_id = parse_notif_id(req.params.id as string);
-		const notifs = await prisma.notification.update({
+		const notif = await prisma.notification.update({
 			where: {id: notif_id},
 			data: {is_read: true},
 		});
-		res.json(notifs);
+
+		const io = req.app.get('io');
+		io.to(`user:${notif.user_id}`).emit('notification_read', {id: notif.id});
+		res.json(notif);
 	} catch (err) {
 		next(err);
 	}
 }
 
 export async function read_all(req: Request, res: Response, next: NextFunction) {
-	// console.log('Mark all notifications as read');
-	// res.send(`PATCH: /api/chat/notifs/read-all endpoint`);
 	try {
 		const user_id = parse_user_id(req.user?.userId);
 		await prisma.notification.updateMany({
 			where: {user_id, is_read: false},
 			data :{is_read: true},
 		});
-		res.json('All notifications marked as read');
+		const io = req.app.get('io');
+		io.to(`user:${user_id}`).emit('notification_read_all');
+
+		res.json({message: 'all notifications marked as read'});
 	} catch (err) {
 		next(err);
 	}

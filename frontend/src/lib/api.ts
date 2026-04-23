@@ -219,6 +219,24 @@ export const friendApi = {
         })
 }
 
+export interface ChatNotif {
+    id: number;
+    user_id: string;
+    type: 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
+    title: string;
+    body: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export const notifApi = {
+    list: (): Promise<ChatNotif[]> => api('/notifs'),
+    markRead: (id: number): Promise<ChatNotif> =>
+        api(`/notifs/${id}/read`, { method: 'PATCH' }),
+    markAllRead: (): Promise<{ message: string }> =>
+        api('/notifs/read-all', { method: 'PATCH' }),
+};
+
 export const analyticsApi = {
     getDashboard: () => api('/analytics/dashboard'),
     health: () => api<HealthResponse>('/analytics/health'),
