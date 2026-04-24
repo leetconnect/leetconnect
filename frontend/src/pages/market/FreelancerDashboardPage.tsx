@@ -64,7 +64,7 @@ const FreelancerDashboardPage: React.FC = () => {
 
       <main className="flex-1 p-8">
 
-        {/* Header */}
+       
         <div className="flex justify-between items-center mb-10">
           <input
             placeholder="Search for jobs, clients, or messages..."
@@ -76,29 +76,42 @@ const FreelancerDashboardPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Title */}
-        <h1 className="text-5xl font-bold mb-3">
-          Welcome back, Alex!
-        </h1>
-
-        <p className="text-zinc-400 mb-10 text-lg">
-          Here's a summary of your activity today:
+      
+      <div>
+        <h1 className="text-2xl font-semibold">Welcome back, Alex!</h1>
+        <p className="text-gray-400 text-sm mt-1">
+          Here's what's happening with your projects today.
         </p>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-6 mb-10">
-          {stats.map(([title, value]) => (
-            <div
-              key={title}
-              className="border border-zinc-800 bg-zinc-950 rounded-2xl p-6"
-            >
-              <p className="text-zinc-400 mb-3">{title}</p>
-              <h3 className="text-4xl font-bold">{value}</h3>
-            </div>
-          ))}
+      
+      <div className="grid grid-cols-4 gap-4 mt-6">
+
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-5">
+          <p className="text-gray-400 text-sm">Active Jobs</p>
+          <h2 className="text-xl font-semibold mt-2">4</h2>
+          <span className="text-green-400 text-sm">↑ 1</span>
         </div>
 
-        {/* Invitations */}
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-5">
+          <p className="text-gray-400 text-sm">New Proposals</p>
+          <h2 className="text-xl font-semibold mt-2">12</h2>
+          <span className="text-gray-400 text-sm">from 8 candidates</span>
+        </div>
+
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-5">
+          <p className="text-gray-400 text-sm">Total Hires</p>
+          <h2 className="text-xl font-semibold mt-2">24</h2>
+          <span className="text-green-400 text-sm">+3 this month</span>
+        </div>
+
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-5">
+          <p className="text-gray-400 text-sm">Total Spend</p>
+          <h2 className="text-xl font-semibold mt-2">$45.2k</h2>
+        </div>
+
+      </div>
+        
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl mb-10">
 
           <div className="flex justify-between p-6 border-b border-zinc-800">
@@ -129,7 +142,7 @@ const FreelancerDashboardPage: React.FC = () => {
           ))}
         </section>
 
-        {/* Proposals */}
+      
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl">
 
           <div className="flex justify-between p-6 border-b border-zinc-800">

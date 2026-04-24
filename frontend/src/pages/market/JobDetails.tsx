@@ -77,34 +77,34 @@ const JobDetails: React.FC = () => {
 // //   }, [id]);
 
 const acceptJob = async (id: string) => {
-  try {
-    const { data } = await axios.post(
-      `http://localhost:5000/api/proposal/accept/${id}`,
-      {}, 
-      { withCredentials: true }
-    );
+  // try {
+  //   const { data } = await axios.post(
+  //     `http://localhost:5000/api/proposal/accept/${id}`,
+  //     {}, 
+  //     { withCredentials: true }
+  //   );
 
     // console.log("Accepted:", data);
     setState("Accept");
     
-  } catch (err) {
-    console.error(err);
-  }
+  // } catch (err) {
+  //   console.error(err);
+  // }
 };
 
 const rejectJob = async (id: string) => {
-  try {
-    const { data } = await axios.post(
-      `http://localhost:5000/api/proposal/reject/${id}`, 
-      {},
-      { withCredentials: true }
-    );
+  // try {
+  //   const { data } = await axios.post(
+  //     `http://localhost:5000/api/proposal/reject/${id}`, 
+  //     {},
+  //     { withCredentials: true }
+  //   );
 
-    console.log("Rejected:", data);
+    // console.log("Rejected:", data);
     setState(" Reject");
-  } catch (err) {
-    console.error(err);
-  }
+  // } catch (err) {
+  //   console.error(err);
+  // }
 };
 
   const job = jobsData.find((item) => item.id === id);

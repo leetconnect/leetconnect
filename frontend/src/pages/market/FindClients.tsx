@@ -1,74 +1,282 @@
-import React from "react";
-import { Briefcase, MapPin, DollarSign } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Search, Sliders } from "lucide-react";
+import axios from "axios";
 
-type ClientJob = {
+import NumberCarousel from "@/components/market/NumberCarousel";
+import FilterModal from "@/components/market/Filters";
+
+
+type Job = {
   id: string | number;
   title: string;
+  description: string;
+  budget: number;
+  category: string;
+  skills: string[];
   client: {
     name: string;
     rating: number;
   };
-  budget: number;
-  location: string;
-  skills: string[];
+  createdAt: string;
 };
 
-type Props = {
-  jobs: ClientJob[];
-};
+const FindClients: React.FC = () => {
+  const [numberPages, setNumberPages] = useState<number>(0);
+  const [currentPages, setcurrentPages] = useState<number>(1);
+  const [showFilter, setShowFilter] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
 
-const FindClients: React.FC<Props> = ({ jobs }) => {
+ 
+  const jobs: Job[] = [
+    {
+      id: "1",
+      title: "React Dashboard",
+      description: "Build dashboard with React & Tailwind",
+      budget: 500,
+      category: "Web Development",
+      skills: ["React", "Tailwind"],
+      client: { name: "Ahmed", rating: 4.8 },
+      createdAt: "2026-04-20",
+    },
+    {
+      id: "2",
+      title: "Mobile App UI",
+      description: "Design mobile UI using Figma",
+      budget: 300,
+      category: "UI/UX Design",
+      skills: ["Figma"],
+      client: { name: "Sara", rating: 4.6 },
+      createdAt: "2026-04-18",
+    },
+    {
+      id: "3",
+      title: "Node API",
+      description: "Build REST API with Express",
+      budget: 400,
+      category: "Backend",
+      skills: ["Node.js", "Express"],
+      client: { name: "Youssef", rating: 4.9 },
+      createdAt: "2026-04-15",
+    },
+  ];
+
+
+
+    const [showApply, setShowApply] = useState(false);
+    const [selectedJobId, setSelectedJobId] = useState<string | number | null>(null);
+
+    const [coverLetter, setCoverLetter] = useState("");
+    const [proposedBudget, setProposedBudget] = useState("");
+    const [deliveryDays, setDeliveryDays] = useState("");
+
+
+    const handleApplyClick = (jobId: string | number) => {
+      setSelectedJobId(jobId);
+      setShowApply(true);
+    };
+  
+  const jobsRange = useMemo(() => {
+    let filtered = jobs;
+
+    if (search) {
+      filtered = jobs.filter((job) =>
+        job.title.toLowerCase().includes(search.toLowerCase()) ||
+        job.skills.some((s) =>
+          s.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+
+    const start = (currentPages - 1) * 6;
+    const end = start + 6;
+
+    const pages = Math.ceil(filtered.length / 6);
+
+    return {
+      data: filtered.slice(start, end),
+      pages,
+    };
+  }, [jobs, currentPages, search]);
+
+  
+
+
+  const handleSubmitProposal = async () => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/proposals",
+        {
+          jobId: selectedJobId,
+          coverLetter,
+          proposedBudget: Number(proposedBudget),
+          deliveryDays: Number(deliveryDays),
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setShowApply(false);
+      setCoverLetter("");
+      setProposedBudget("");
+      setDeliveryDays("");
+
+      alert("Proposal sent ✅");
+
+    } catch (error) {
+      console.error(error);
+      alert("Error sending proposal ❌");
+    }
+  };
+
+  React.useEffect(() => {
+    setNumberPages(jobsRange.pages);
+  }, [jobsRange.pages]);
+
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="bg-black text-white w-full min-h-screen px-10 py-10 flex flex-col gap-8">
 
-      <h2 className="text-2xl font-semibold text-white">
-        Find Clients & Projects
-      </h2>
+      <h1 className="text-4xl font-semibold">
+        Find Jobs
+      </h1>
+
+     
+      <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-xl flex-1">
+          <Search size={18} className="text-gray-400" />
+
+          <input
+            type="text"
+            placeholder="Search jobs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent outline-none w-full text-gray-300"
+          />
+        </div>
+
+        <button
+          className="flex items-center gap-2 bg-[#111] px-4 py-3 rounded-xl"
+          onClick={() => setShowFilter(true)}
+        >
+          <Sliders size={18} className="text-[#69B34C]" />
+          Filter
+        </button>
+
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-        {jobs.map((job) => (
+        {jobsRange.data.map((job) => (
           <div
             key={job.id}
-            className="bg-[#111] border border-gray-800 rounded-xl p-5"
+            className="bg-[#111] p-5 rounded-xl border border-gray-800 hover:border-[#69B34C]"
           >
+            <h2 className="text-lg font-semibold">{job.title}</h2>
 
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Briefcase size={18} />
-              {job.title}
-            </h3>
-
-            <p className="text-gray-400 mt-2">
-              Client: {job.client}
+            <p className="text-sm text-gray-400 mt-2">
+              {job.description}
             </p>
 
-            <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
-              <span className="flex items-center gap-1">
-                <DollarSign size={14} />
-                ${job.budget}
-              </span>
-
-              <span className="flex items-center gap-1">
-                <MapPin size={14} />
-                {job.location}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              {job.skills.map((skill, index) => (
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {job.skills.map((skill, i) => (
                 <span
-                  key={index}
-                  className="text-xs px-2 py-1 rounded-full bg-green-900 text-green-300"
+                  key={i}
+                  className="text-xs px-2 py-1 bg-[#132112] text-[#69B34C] rounded"
                 >
                   {skill}
                 </span>
               ))}
             </div>
 
+            <div className="flex justify-between mt-4 text-sm text-gray-400">
+              <span>{job.client.name}</span>
+              <span>⭐ {job.client.rating}</span>
+            </div>
+
+            <div className="flex justify-between mt-3">
+              <span className="text-[#69B34C] font-semibold">
+                ${job.budget}
+              </span>
+
+              <button
+                onClick={() => handleApplyClick(job.id)}
+                className="bg-[#69B34C] text-black px-3 py-1 rounded text-sm"
+              >
+                Apply
+              </button>
+            </div>
           </div>
         ))}
 
       </div>
+
+      <div className="flex justify-center mt-6">
+        <NumberCarousel
+          currentPages={currentPages}
+          setcurrentPages={setcurrentPages}
+          numberPages={numberPages}
+        />
+      </div>
+
+ 
+      {showFilter && (
+        <FilterModal
+          showFilter={showFilter}
+          setShowFilter={setShowFilter}
+        />
+      )}
+
+
+      {showApply && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+
+          <div className="bg-[#111] p-6 rounded-xl w-[400px] flex flex-col gap-4">
+
+            <h2 className="text-lg font-semibold">Apply to this job</h2>
+
+            <textarea
+              placeholder="Cover Letter..."
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              className="bg-black border border-gray-700 p-2 rounded"
+            />
+
+            <input
+              type="number"
+              placeholder="Your Budget"
+              value={proposedBudget}
+              onChange={(e) => setProposedBudget(e.target.value)}
+              className="bg-black border border-gray-700 p-2 rounded"
+            />
+
+            <input
+              type="number"
+              placeholder="Delivery Days"
+              value={deliveryDays}
+              onChange={(e) => setDeliveryDays(e.target.value)}
+              className="bg-black border border-gray-700 p-2 rounded"
+            />
+
+            <div className="flex justify-between mt-2">
+              <button
+                onClick={() => setShowApply(false)}
+                className="bg-gray-700 px-3 py-1 rounded"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSubmitProposal}
+                className="bg-[#69B34C] text-black px-3 py-1 rounded"
+              >
+                Send
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
