@@ -46,7 +46,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 						user: {
 							select: {
 								username: true,
-								avatar: true
+								avatar: true,
+								isOnline: true
 							}
 						}
 					}

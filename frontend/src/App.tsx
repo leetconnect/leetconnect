@@ -13,6 +13,7 @@ import Layout from './components/Layout';
 // import Theme from './components/ThemeShowcase';
 // import Navbar from './components/Navbar';
 import { ScrollToTop } from './components/ScrollToTop';
+import ProfilePage from './pages/profile/ProfilePage';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<Messages />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
         </Route>
       </Routes>
     </>

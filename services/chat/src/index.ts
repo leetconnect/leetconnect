@@ -9,6 +9,7 @@ import convers_routes	from './routes/route.convers';
 import message_routes	from './routes/route.messages';
 import notif_routes		from './routes/route.notifs';
 import friends_routes	from './routes/route.friends';
+import users_routes		from './routes/route.users';
 
 import prisma			from './config/config.database';
 
@@ -52,6 +53,7 @@ app.use('/api/chat/convers', 			  convers_routes);
 app.use('/api/chat/convers/:id/messages', message_routes);
 app.use('/api/friend/requests', 		  friends_routes);
 app.use('/api/notifs', 					  notif_routes);
+app.use('/api/chat',					  users_routes);
 
 app.use(error_handler);
 
