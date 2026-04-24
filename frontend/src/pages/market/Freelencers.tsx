@@ -7,7 +7,7 @@ import NumberCarousel from "@/components/market/NumberCarousel";
 import FilterModal from "@/components/market/Filters";
 import { context } from "../../context/context";
 
-/* ---------------- TYPES ---------------- */
+
 
 type SkillsState = Record<string, string[]>;
 
@@ -20,7 +20,7 @@ type Freelancer = {
   skills: string[];
 };
 
-/* ---------------- COMPONENT ---------------- */
+
 
 const Freelencers: React.FC = () => {
   const [numberPages, setNumberPages] = useState<number>(0);
@@ -41,17 +41,15 @@ const {
   setFreelancers,
 } = ctx;
 
-  /* REMOVE SKILL */
+  
   const removeSkill = (skill: string) => {
     Object.entries(skills).forEach(([key, value]) => {
-      setSkills((prev: SkillsState) => ({
-        ...prev,
-        [key]: value.filter((item: string) => item !== skill),
+      setSkills((prev: SkillsState) => ({...prev,[key]: value.filter((item: string) => item !== skill),
       }));
     });
   };
 
-  /* PAGINATION */
+
   const freelancerRange = useMemo(() => {
     const start = (currentPages - 1) * 6;
     const end = start + 6;
@@ -62,7 +60,7 @@ const {
     return freelancers.slice(start, end);
   }, [currentPages, freelancers]);
 
-  /* INIT DATA */
+  
   useEffect(() => {
     setFreelancers(freelencer);
   }, [setFreelancers]);
@@ -70,12 +68,12 @@ const {
   return (
     <div className="bg-black text-white w-full min-h-screen px-10 py-10 flex flex-col gap-8">
 
-      {/* TITLE */}
+     
       <h1 className="text-4xl font-semibold">
         Find Top Talent
       </h1>
 
-      {/* SEARCH + FILTER */}
+     
       <div className="flex items-center gap-4">
 
         <div className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-xl flex-1">
@@ -98,7 +96,7 @@ const {
 
       </div>
 
-      {/* SKILLS TAGS */}
+    
       <div className="flex items-center gap-3 flex-wrap">
 
         {allSkills?.map((item: string, index: number) => (
@@ -132,7 +130,7 @@ const {
 
       </div>
 
-      {/* FREELANCERS GRID */}
+     
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
         {freelancerRange.map((item: Freelancer) => (
@@ -144,7 +142,7 @@ const {
 
       </div>
 
-      {/* PAGINATION */}
+      
       <div className="flex justify-center mt-6">
         <NumberCarousel
           currentPages={currentPages}
@@ -153,7 +151,7 @@ const {
         />
       </div>
 
-      {/* FILTER MODAL */}
+     
       {showFilter && (
         <FilterModal
           showFilter={showFilter}
