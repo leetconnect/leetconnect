@@ -167,6 +167,7 @@ export default function Messages() {
 					convers_name={convers_name}
 					convers_avatar={convers_avatar}
 					convers_username={convers_username}
+					is_direct={active_convers.type === 'Direct'}
 					messages={messages}
 					curr_user={CURRENT_USER_ID}
 					onSendMessage={handleSend}
