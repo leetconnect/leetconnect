@@ -1,37 +1,99 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CanAccess } from '../../components/CanAccess';
 import { RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
-import { MOCK_USERS } from '../../lib/mockData';
 import { ROLE_META } from '../../lib/permissions';
-import type { User, Role } from '../../types';
+import type { AdminUser, Role } from '../../types';
 import { HiOutlineMagnifyingGlass, HiOutlineUserMinus } from 'react-icons/hi2';
+import { adminApi } from '@/lib/api';
+import { Spin } from '@/components/ui/Spin';
+import { useDebounce } from '@/hooks/useDebounce';
 
-const ALL_ROLES: Role[] = ['admin', 'moderator', 'user', 'guest'];
+const ALL_ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 
 export const UsersPage = () => {
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState('');
+	const debouncedSearch = useDebounce(search, 500);
 
-  const filtered = users.filter(u => {
-    const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchRole   = roleFilter === 'all' || u.role === roleFilter;
-    return matchSearch && matchRole;
-  });
+	useEffect(() => {
+		async function fetchUsers() {
+			setLoading(true);
+			try {
+				const params: any = {};
+				if(debouncedSearch) params.search = debouncedSearch;
+				if(roleFilter !== 'all') params.role = roleFilter;
 
-  function handleRoleChange(userId: string, newRole: Role) {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+				const data = await adminApi.getUsers(params);
+				setUsers(data);
+			} catch (error: any) {
+				console.error("Failed to fetch users: ", error.message);
+				setError(error.message || "Failed to fetch users");
+			} finally {
+				setLoading(false);
+			}
+		}
+		fetchUsers();
+	}, [debouncedSearch, roleFilter]);
+
+	useEffect(() => {
+		async function fetchAllUsers() {
+			try {
+				const data = await adminApi.getUsers();
+				setAllUsers(data);
+			} catch (error: any) {
+				console.error('Failed to fetch users: ', error.message);
+				setError(error.message || "Failed to fetch users");
+			}
+		}
+		fetchAllUsers();
+	}, [])
+
+  // const filtered = users.filter(u => {
+  //   const matchSearch = u.username.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+  //   const matchRole   = roleFilter === 'all' || u.role === roleFilter;
+  //   return matchSearch && matchRole;
+  // });
+
+  async function handleRoleChange(userId: string, newRole: Role) {
+		const previousUsers = users;
+		setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole }: u));
+
+		try {
+			const updated = await adminApi.updateUserRole(userId, newRole);
+			setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+		} catch (error: any) {
+			setUsers(previousUsers);
+			alert(error.message);
+		}
   }
-  function handleStatusToggle(userId: string) {
-    setUsers(prev => prev.map(u =>
-      u.id === userId ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' } : u
-    ));
+  async function handleStatusToggle(userId: string, currentStatus: string) {
+		const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+		try {
+			const updated = await adminApi.updateUserStatus(userId, newStatus);
+			setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+		} catch (error: any) {
+			alert(error.message);
+		}
   }
-  function handleDelete(userId: string) {
-    setUsers(prev => prev.filter(u => u.id !== userId));
+  async function handleDelete(userId: string) {
+		try {
+			await adminApi.deleteUser(userId);
+			setUsers(prev => prev.filter(u => u.id !== userId));
+		} catch (error: any) {
+			alert(error.message);
+		}
     setDeleteConfirm(null);
   }
+
+	if (loading) {
+		return(<Spin />)
+	}
+  if (error) return <div className="p-8 text-destructive">{error}</div>;
 
   return (
     <div className="p-8">
@@ -41,9 +103,9 @@ export const UsersPage = () => {
       </div>
 
       
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-8">
         {ALL_ROLES.map(role => {
-          const count    = users.filter(u => u.role === role).length;
+          const count = allUsers.filter(u => u.role === role).length;
           const isActive = roleFilter === role;
           return (
             <button
@@ -84,7 +146,7 @@ export const UsersPage = () => {
           <option value="all">All roles</option>
           {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_META[r].label}</option>)}
         </select>
-        <span className="ml-auto text-sm font-semibold text-muted-foreground">{filtered.length} users</span>
+        <span className="ml-auto text-sm font-semibold text-muted-foreground">{users.length} users</span>
       </div>
 
       
@@ -100,15 +162,15 @@ export const UsersPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.map(user => (
-              <tr key={user.id} className="hover:bg-secondary/30 transition-colors group">
+            {users.map(user => (
+              <tr key={user.id} className="hover:bg-secondary/30 transition-colos group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
                       {user.avatar}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{user.name}</p>
+                      <p className="text-sm font-medium text-foreground">{`${user.firstname} ${user.lastname}`}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
@@ -134,7 +196,7 @@ export const UsersPage = () => {
                   <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <CanAccess permission="users:edit">
                       <button
-                        onClick={() => handleStatusToggle(user.id)}
+                        onClick={() => handleStatusToggle(user.id, user.status)}
                         className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                           user.status === 'active'
                             ? 'text-amber-400 hover:bg-amber-400/10'
@@ -166,7 +228,7 @@ export const UsersPage = () => {
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {users.length === 0 && (
           <div className="py-16 text-center text-muted-foreground text-sm">No users match your search.</div>
         )}
       </div>

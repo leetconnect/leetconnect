@@ -8,16 +8,18 @@ import { RolesPage } from './RolesPage';
 import { ForbiddenPage } from '../ForbiddenPage';
 import { Analytics } from './Analytics';
 import { JobsPage } from './JobsPage';
+import { AdminLoginPage } from './AdminLoginPage';
 
 const Admin = () => {
   return (
     <AuthProvider>
       <Routes>
         <Route path='403' element={<ForbiddenPage />} />
+				<Route path='login' element={<AdminLoginPage />} />
 
         <Route
           element={
-            <ProtectedRoute minRole='guest'>
+            <ProtectedRoute minRole='MODERATOR'>
               <DashboardLayout />
             </ProtectedRoute>
           }>
@@ -25,7 +27,7 @@ const Admin = () => {
           <Route
             path='users'
             element={
-              <ProtectedRoute minRole='moderator'>
+              <ProtectedRoute minRole='MODERATOR'>
                 <UsersPage />
               </ProtectedRoute>
             }/>
@@ -33,7 +35,7 @@ const Admin = () => {
 					<Route
 						path='jobs'
 						element={
-							<ProtectedRoute minRole='moderator'>
+							<ProtectedRoute minRole='MODERATOR'>
 								<JobsPage />
 							</ProtectedRoute>
 						}/>
@@ -41,7 +43,7 @@ const Admin = () => {
           <Route
             path='roles'
             element={
-              <ProtectedRoute minRole='admin'>
+              <ProtectedRoute minRole='ADMIN'>
                 <RolesPage />
               </ProtectedRoute>
             }/>
@@ -49,10 +51,10 @@ const Admin = () => {
 					<Route 
 						path='analytics'
 						element={
-							<ProtectedRoute minRole='admin'>
+							<ProtectedRoute minRole='ADMIN'>
 								<Analytics />
 							</ProtectedRoute>
-						}/>		
+						}/>
 
         </Route>
 
