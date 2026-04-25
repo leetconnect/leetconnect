@@ -1,13 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CanAccess } from "@/components/CanAccess";
-import { MOCK_JOBS } from "@/lib/mockData";
 import { Job, JobStatus, JobCategory } from "../../types"
-import { HiOutlineBookmark, HiOutlineBookmarkSlash, HiOutlineBriefcase, HiOutlineCheckCircle, HiOutlineEye, HiOutlineMagnifyingGlass, HiOutlineTrash, HiOutlineXMark } from "react-icons/hi2";
+import { HiOutlineBookmark,
+				 HiOutlineBookmarkSlash,
+				 HiOutlineBriefcase,
+				 HiOutlineCheckCircle,
+				 HiOutlineEye,
+				 HiOutlineMagnifyingGlass,
+				 HiOutlineTrash,
+				 HiOutlineXMark } from "react-icons/hi2";
+import { adminApi } from "@/lib/api";
+import { Spin } from "@/components/ui/Spin";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const STATUS_STYLES: Record<JobStatus, { badge: string; dot: string; label: string }> = {
-  active:  { badge: 'bg-primary/10 text-primary border-primary/20', dot: 'bg-primary', label: 'Active' },
-  closed:  { badge: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground', label: 'Closed' },
-  flagged: { badge: 'bg-destructive/10 text-destructive border-destructive/20', dot: 'bg-destructive', label: 'Flagged' },
+  active:  { badge: 'text-primary border-primary/20', dot: 'bg-primary', label: 'Active' },
+  closed:  { badge: 'text-muted-foreground border-border', dot: 'bg-muted-foreground', label: 'Closed' },
+  flagged: { badge: 'text-destructive border-destructive/20', dot: 'bg-destructive', label: 'Flagged' },
 };
 const ALL_STATUSES: JobStatus[] = ['active', 'closed', 'flagged'];
 
@@ -27,6 +36,7 @@ function timeAgo(date: string) {
 	if (days === 0) return 'Today';
 	if (days === 1) return '1 day ago';
 	const months = Math.floor(days / 30);
+	if(months === 0) return `${days} days ago`;
 	return `${months} month${months > 1 ? 's' : ''} ago`;
 }
 
@@ -91,7 +101,7 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 				<div className="px-6 py-5 grid grid-cols-2 gap-4 border-b border-border">
           {[
             { label: 'Budget', value: formatBudget(job) },
-            { label: 'Proposals', value: `${job.proposalCount} received` },
+            { label: 'Proposals', value: `${job.proposals} received` },
             { label: 'Posted', value: timeAgo(job.createdAt) },
             { label: 'Deadline', value: job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline' },
           ].map(item => (
@@ -107,7 +117,7 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
           <p className="text-xs text-muted-foreground mb-3">Posted by</p>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-              {job.postedByAvatar}
+              {job.createdBy.avatar}
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">{job.postedByName}</p>
@@ -153,7 +163,7 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
             })}
           </div>
 
-          <CanAccess permission="jobs:delete">
+          <CanAccess permission="content:delete">
             {confirmDelete ? (
               <div className="flex gap-2">
                 <button
@@ -187,32 +197,55 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 }
 
 export const JobsPage = () => {
-  const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<JobCategory | 'all'>('all');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+	const [error, setError] = useState('');
+	const [loading, setLoading] = useState(true);
+	const debouncedSearch = useDebounce(search, 500);
 
-  function handleDelete(id: string) {
-    setJobs(prev => prev.filter(j => j.id !== id));
-    setDeleteConfirm(null);
+	useEffect(() => {
+		async function fetchJobs() {
+			setLoading(true);
+			try {
+				const params: any = {};
+				if(debouncedSearch) params.search = debouncedSearch;
+				if(statusFilter !== 'all') params.status = statusFilter;
+				if(categoryFilter !== 'all') params.category = categoryFilter;
+				const data = await adminApi.getJobs(params);
+				setJobs(data);
+			} catch (error: any) {
+				console.error('Failed to fetch jobs: ', error);
+				setError(error.message || 'Failed to fetch jobs');
+			} finally {
+				setLoading(false);
+			}
+		}
+		fetchJobs();
+	}, [debouncedSearch, statusFilter, categoryFilter]);
+
+  async function handleDelete(id: string) {
+		try {
+			await adminApi.deleteJob(id);
+			setJobs(prev => prev.filter(j => j.id !== id));
+		} catch (error: any) {
+			alert(error.message);
+		}
+		setDeleteConfirm(null);
   }
 
-  function handleStatusChange(id: string, status: JobStatus) {
-    setJobs(prev => prev.map(j => j.id === id ? { ...j, status } : j));
+  async function handleStatusChange(id: string, status: JobStatus) {
+		try {
+			const updated = await adminApi.updateJobStatus(id, status);
+			setJobs(prev => prev.map(j => j.id === id ? updated : j));
+		} catch (error: any) {
+			alert(error.message);
+		}
     setSelectedJob(prev => prev?.id === id ? { ...prev, status } : prev);
   }
-
-  const filtered = useMemo(() =>
-    jobs.filter(j => {
-      const matchSearch = j.title.toLowerCase().includes(search.toLowerCase()) || j.postedByName.toLowerCase().includes(search.toLowerCase()) ||
-                            j.skills.some(s => s.toLowerCase().includes(search.toLowerCase()));
-      const matchStatus = statusFilter === 'all' || j.status === statusFilter;
-      const matchCategory = categoryFilter === 'all' || j.category === categoryFilter;
-      return matchSearch && matchStatus && matchCategory;
-    }),
-  [jobs, search, statusFilter, categoryFilter]);
 
   const counts = useMemo(() => ({
     total: jobs.length,
@@ -220,6 +253,11 @@ export const JobsPage = () => {
     flagged: jobs.filter(j => j.status === 'flagged').length,
     closed: jobs.filter(j => j.status === 'closed').length,
   }), [jobs]);
+
+	if(loading) {
+		return(<Spin />)
+	}
+	if(error) return <div className="p-8 text-destructive">{error}</div>;
 
   return (
     <div className="p-8">
@@ -304,7 +342,7 @@ export const JobsPage = () => {
           <option value="all">All categories</option>
           {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <span className="ml-auto text-sm font-semibold text-muted-foreground">{filtered.length} jobs</span>
+        <span className="ml-auto text-sm font-semibold text-muted-foreground">{jobs.length} jobs</span>
       </div>
 
       
@@ -322,11 +360,11 @@ export const JobsPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.map(job => {
+            {jobs.map(job => {
               const s = STATUS_STYLES[job.status];
               return (
                 <tr
-                  key={Number(job.id)}
+                  key={job.id}
                   className="hover:bg-secondary/30 transition-colors group cursor-pointer"
                   onClick={() => setSelectedJob(job)}>
                 
@@ -349,7 +387,7 @@ export const JobsPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
-                        {job.postedByAvatar}
+                        {job.createdBy.avatar}
                       </div>
                       <span className="text-sm text-foreground">{job.postedByName}</span>
                     </div>
@@ -367,7 +405,7 @@ export const JobsPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
                       <span className={`text-sm font-semibold text-foreground`}>
-                        {job.proposalCount}
+                        {job.proposals}
                       </span>
                     </div>
                   </td>
@@ -396,7 +434,7 @@ export const JobsPage = () => {
                         <HiOutlineEye className="w-4 h-5" />
                       </button>
 
-                      <CanAccess permission="jobs:moderate">
+                      <CanAccess permission="content:moderate">
                         {job.status !== 'flagged' && (
                           <button
                             onClick={() => handleStatusChange(job.id, 'flagged')}
@@ -417,7 +455,7 @@ export const JobsPage = () => {
                         )}
                       </CanAccess>
 
-                      <CanAccess permission="jobs:delete">
+                      <CanAccess permission="content:delete">
                         {deleteConfirm === job.id ? (
                           <div className="flex items-center gap-1">
                             <button onClick={() => handleDelete(job.id)} className="px-2 py-1 rounded text-xs font-medium text-white bg-destructive hover:bg-destructive/80 transition-colors">
@@ -445,7 +483,7 @@ export const JobsPage = () => {
           </tbody>
         </table>
 
-        {filtered.length === 0 && (
+        {jobs.length === 0 && (
           <div className="py-16 text-center">
             <HiOutlineBriefcase className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No jobs match your filters.</p>
