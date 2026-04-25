@@ -48,6 +48,7 @@ export const getMyJobs = async (req: Request, res: Response) => {
 
     const jobs = await prisma.job.findMany({
       where: { clientId },
+      include: { proposals: true },
       orderBy: { createdAt: "desc" },
     });
 
