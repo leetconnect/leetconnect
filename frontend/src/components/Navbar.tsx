@@ -75,14 +75,14 @@ export default function Navbar() {
                 Sign up
               </Button>
             </>
-          ) : (
+          ) : !loading && user ? (
             <Button
               onClick={handleLogout}
               variant="default"
             >
               Logout
             </Button>
-          )}
+          ) : null}
         </div>
       </nav>
     </header>
