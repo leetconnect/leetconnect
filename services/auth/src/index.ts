@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 // shared resources
-import { initEventBus, closeEventBus, errorHandler} from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
 
 // ensure zero trust 
 // import fs from 'fs';
@@ -17,6 +17,26 @@ import { rateLimit } from 'express-rate-limit';
 
 const app = express();
 const PORT =  3001;
+
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const durationSeconds = (Date.now() - start) / 1000;
+    const route = req.route?.path ?? req.path;
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(labels, durationSeconds);
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 
 // SSL configuration
 // const sslOptions = {
@@ -34,6 +54,11 @@ app.use(morgan('dev')); // display logs
 app.use(express.json()); // takes body of request and turn it into req.body object
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
 
 // add rate limiting 
 // const authLimiter = rateLimit({

@@ -18,7 +18,11 @@ import { setup_sockets } from './sockets/socket.handler';
 
 import {
 	initEventBus, subscribeToEvents,
-	AUTH_EVENTS } from '@leetconnect/shared';
+	AUTH_EVENTS,
+	getMetrics,
+	httpRequestDuration,
+	httpRequestsTotal,
+} from '@leetconnect/shared';
 
 import { authMiddleware } from '@leetconnect/shared';
 
@@ -45,6 +49,30 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.set('io', io);
+
+app.use((req, res, next) => {
+	const start = Date.now();
+
+	res.on('finish', () => {
+		const durationSeconds = (Date.now() - start) / 1000;
+		const route = req.route?.path ?? req.path;
+		const labels = {
+			method: req.method,
+			route,
+			status_code: String(res.statusCode),
+		};
+
+		httpRequestDuration.observe(labels, durationSeconds);
+		httpRequestsTotal.inc(labels);
+	});
+
+	next();
+});
+
+app.get('/metrics', async (_req, res) => {
+	res.set('Content-Type', 'text/plain; version=0.0.4');
+	res.send(await getMetrics());
+});
 
 app.use('/api/chat', health_routes);
 
