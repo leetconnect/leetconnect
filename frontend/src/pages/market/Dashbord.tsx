@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Header */}
+  
       <div>
         <h1 className="text-2xl font-semibold">Welcome back, Alex!</h1>
         <p className="text-gray-400 text-sm mt-1">
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Cards */}
+
       <div className="grid grid-cols-4 gap-4 mt-6">
 
         <div className="bg-[#111] border border-gray-800 rounded-xl p-5">
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
 
       </div>
 
-      {/* Table */}
+
       <div className="bg-[#111] border border-gray-800 rounded-xl mt-8">
 
         <div className="flex justify-between items-center p-4 border-b border-gray-800">
@@ -190,16 +190,16 @@ const Dashboard: React.FC = () => {
             key={job.id}
             className="grid grid-cols-4 p-4 items-center border-b border-gray-800"
           >
-            {/* Title */}
+   
             <div>
               <p className="font-medium">{job.title}</p>
               <p className="text-gray-400 text-sm">{job.category}</p>
             </div>
 
-            {/* Posted */}
+    
             <span className="text-sm text-gray-400">{job.posted}</span>
 
-            {/* Proposals */}
+
             {job.proposals > 0 ? (
               <div className="flex -space-x-2">
                 {Array.from({ length: job.proposals }).map((_, i) => (
