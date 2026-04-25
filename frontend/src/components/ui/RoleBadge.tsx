@@ -25,9 +25,9 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
-    active:    'bg-primary/10 text-primary border-primary/20',
-    suspended: 'bg-destructive/10 text-destructive border-destructive/20',
-    pending:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    active:    'text-primary border-primary/20',
+    suspended: 'text-destructive border-destructive/20',
+    pending:   'text-amber-400 border-amber-500/20',
   };
   const dotStyles = {
     active:    'bg-primary',
