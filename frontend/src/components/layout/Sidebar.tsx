@@ -1,18 +1,19 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { HiOutlineArrowRightOnRectangle,
 				 HiOutlineBriefcase,
 				 HiOutlineChartPie,
 				 HiOutlineShieldCheck,
 				 HiOutlineSquares2X2,
 				 HiOutlineUsers } from "react-icons/hi2";
+import { Link } from 'react-router-dom';
 
 
 const NAV_MAIN = [
   {
     label: 'Dashboard',
     href: '/admin',
-    minRole: 'guest' as const,
+    minRole: 'MODERATOR' as const,
     icon: (
       <HiOutlineSquares2X2 className='w-4 h-4'/>
     ),
@@ -20,7 +21,7 @@ const NAV_MAIN = [
   {
     label: 'Users',
     href: '/admin/users',
-    minRole: 'moderator' as const,
+    minRole: 'MODERATOR' as const,
     icon: (
 			<HiOutlineUsers className="h-4 w-4" />
 
@@ -29,7 +30,7 @@ const NAV_MAIN = [
 	{
 		label: 'Jobs',
 		href: '/admin/jobs',
-		minRole: 'moderator' as const,
+		minRole: 'MODERATOR' as const,
 		icon: (
 			<HiOutlineBriefcase className='h-4 w-4' />
 		),
@@ -37,7 +38,7 @@ const NAV_MAIN = [
   {
     label: 'Roles',
     href: '/admin/roles',
-    minRole: 'admin' as const,
+    minRole: 'ADMIN' as const,
     icon: (
       <HiOutlineShieldCheck className='h-4 w-4' />
     ),
@@ -45,7 +46,7 @@ const NAV_MAIN = [
   {
     label: 'Analytics',
     href: '/admin/analytics',
-    minRole: 'admin' as const,
+    minRole: 'ADMIN' as const,
     icon: (
       <HiOutlineChartPie className='h-5 w-5' />
     ),
@@ -58,7 +59,7 @@ export const Sidebar = () => {
 
   function handleLogout() {
     logout();
-    navigate('/login');
+    navigate('/admin/login');
   }
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -69,10 +70,13 @@ export const Sidebar = () => {
     }`;
 
   return (
-    <aside className="w-[250px] shrink-0 flex flex-col bg-sidebar border-r border-sidebar-border h-screen overflow-hidden">
+    <aside className="w-[250px] shrink-0 flex flex-col bg-sidebar border-sidebar-border h-screen overflow-hidden">
       <div className="px-10 py-5 items-center">
-        <span className="font-brand text-lg font-bold text-primary tracking-tight">leet</span>
-        <span className="font-brand text-lg font-bold text-muted-foreground tracking-tight">connect</span>
+				<Link to="/admin">
+            <span className="font-sans font-bold text-[20px] tracking-tighter flex items-baseline cursor-pointer transition-colors hover:opacity-80">
+                <span className="text-primary">leet</span><span className="text-muted-foreground">connect</span>
+            </span>
+        </Link>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5">
@@ -93,7 +97,7 @@ export const Sidebar = () => {
               {user.avatar}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{user.name}</p>
+              <p className="text-xs font-medium text-foreground truncate">{`${user.firstname} ${user.lastname}`}</p>
               <p className="text-[10px] text-muted-foreground capitalize">{user.role} Account</p>
             </div>
           </div>
