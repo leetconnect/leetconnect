@@ -4,7 +4,7 @@ import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import About from './pages/About';
-// import Login from './pages/auth/Login';
+import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 // import Dashboard from './pages/market/Dashboard';
 import Messages from './pages/chat/Messages';
