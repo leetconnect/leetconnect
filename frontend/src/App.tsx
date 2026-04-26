@@ -17,6 +17,9 @@ import { GuestRoute } from './components/GuestRoute';
 import Dashboard from './pages/market/Dashbord';
 import Freelencers from './pages/market/Freelencers';
 import JobDetails from './pages/market/JobDetails';
+import PostJob from './pages/market/PostJob';
+import FreelancerDashboardPage from './pages/market/FreelancerDashboardPage';
+import FindClients from './pages/market/FindClients';
 
 export default function App() {
   return (
@@ -41,7 +44,10 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={< Dashboard/>} />
           <Route path='/findfreelancer' element={<Freelencers/>} />
-          <Route path='/jobs/:idJob'  element={<JobDetails/>} />
+          <Route path='/jobs/:id'  element={<JobDetails/>} />
+          <Route path='/addjob' element={<PostJob/>} />
+          <Route path='/freedashboard' element={<FreelancerDashboardPage/>}/>
+          <Route path='/findclient' element={<FindClients/>}/>
           <Route path="/messages" element={<Messages />} />
           <Route path="/admin" element={<Admin />} />
         </Route>
