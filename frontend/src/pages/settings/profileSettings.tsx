@@ -6,9 +6,9 @@ import { Eye, EyeOff, Lock} from 'lucide-react';
 import { useAuth } from '@/context/userContext';
 
 export default function ProfileSettings() {
-    const {setUser} = useAuth();
-
-    const [loading, setLoading] = useState(true);
+    const { user, setUser, loading: authLoading } = useAuth();
+    
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -19,8 +19,8 @@ export default function ProfileSettings() {
         firstname: '',
         lastname: '',
         username: '',
-        bio: '',
         email: '',
+        bio: '',
         location: '',
         website: '',
         title: '',
@@ -48,33 +48,28 @@ export default function ProfileSettings() {
 
     // Load user data
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const userData = await authApi.me();
+        if (authLoading) return;
 
-
-                // Use firstname and lastname from backend
-                setProfileForm({
-                    firstname: userData.firstname || '',
-                    lastname: userData.lastname || '',
-                    username: userData.username || '',
-                    bio: '',
-                    email: userData.email || '',
-                    location: '',
-                    website: '',
-                    title: '',
-                    avatar: userData.avatar || '',
-                });
-            } catch (err: any) {
-                setError(err.message || 'Failed to load profile');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-
-        loadUser();
-    }, []);
+        if (user) {
+            // Fill the form using the data already in the Context Cloud!
+            setProfileForm({
+                firstname: user.firstname || '',
+                lastname: user.lastname || '',
+                username: user.username || '',
+                email: user.email || '',
+                bio: user.bio || '',
+                location: user.location || '',
+                website: user.website || '',
+                title: user.title || '',
+                avatar: user.avatar || '',
+            });
+            setLoading(false);
+        } else {
+            // If user is null after loading finishes, the ProtectedRoute 
+            // will kick them to /login anyway.
+            setLoading(false);
+        }
+    }, [user, authLoading]);
 
 
     // Clear success message after 3 seconds
@@ -202,7 +197,12 @@ export default function ProfileSettings() {
             });
             const updatedUser = await authApi.me();
             setUser(updatedUser);
+            console.log("bio: ", profileForm.bio);
+            console.log("bio: ", updatedUser.bio);
 
+            console.log("location: ", updatedUser.location);
+            console.log("website: ", updatedUser.website);
+            console.log("title: ", updatedUser.title);
             setSuccessMessage('Profile updated successfully!');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
