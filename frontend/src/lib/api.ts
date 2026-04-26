@@ -31,9 +31,16 @@ export interface User {
     username: string; // Used 'username' instead of 'name'
     firstname: string;
     lastname: string;
+    avatar: string;
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
+
+    // profile settings
+    bio: string;
+    location: string,
+    website: string,
+    title: string
 }
 
 export interface Job {
@@ -137,7 +144,12 @@ export const authApi = {
     login: (data: LoginRequest) => api<AuthResponse>('/auth/login', { method: 'POST', body: data }),
     register: (data: RegisterRequest) => api<AuthResponse>('/auth/register', { method: 'POST', body: data }),
     me: () => api<User>('/auth/me'),
+    refresh: () => api<{ accessToken: string }>('/auth/refresh', { method: 'POST' }),
     health: () => api<HealthResponse>('/auth/health'),
+    updateProfile: (data: any) => api<User>('/auth/settings', { method: 'PATCH', body: data }),
+    changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
+    // 2FA
+    // remote auth
 };
 
 export const marketApi = {
