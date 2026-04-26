@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, setAccessToken, type User } from '../lib/api';
+import { authApi } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -7,6 +8,7 @@ interface AuthContextType {
   login: (data: any) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,6 +22,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // If accessToken is null, api() will automatically try to /refresh via cookie.
     const initAuth = async () => {
       try {
+        // Instead of /me, try to get a new token from the cookie immediately
+        // This populates the _accessToken in api.ts RAM
+        const refreshData = await authApi.refresh(); 
+        setAccessToken(refreshData.accessToken);
         const userData = await api<User>('/auth/me');
         setUser(userData);
       } catch (e) {
@@ -56,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -71,18 +71,19 @@ export default function Navbar() {
               <Button
                 onClick={() => navigate('/auth/sign-up')}
                 variant={isActive('/auth/sign-up') ? 'default' : 'outline'}
+                className={!location.pathname.startsWith('/auth') ? 'bg-white text-black hover:bg-white/90' : ''}
               >
                 Sign up
               </Button>
             </>
-          ) : (
+          ) : !loading && user ? (
             <Button
               onClick={handleLogout}
               variant="default"
             >
               Logout
             </Button>
-          )}
+          ) : null}
         </div>
       </nav>
     </header>
