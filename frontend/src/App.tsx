@@ -38,7 +38,7 @@ export default function App() {
         {/*authenticated routes (with shared layout)*/}
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/messages" element={<Messages />} />
+          <Route path="/chat" element={<Messages />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/settings/profile" element={<ProfileSettingsPage />} />
         </Route>
