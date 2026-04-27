@@ -49,8 +49,13 @@ services/auth/.env
 
 #certs
 certs/
+docs/
 /tree.txt
 /tests.md
+Leetconnect Sign In.png
+Leetconnect Sign Up.png
+profileSettings.png
+userContext.md
 
 migrations/
 *.md
