@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.7.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.7.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -189,8 +189,8 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "previewFeatures": [],
-  "clientVersion": "7.7.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id            String         @id @default(uuid())\n  email         String         @unique\n  username      String         @unique\n  firstname     String         @default(\"\")\n  lastname      String         @default(\"\")\n  status        Status         @default(active)\n  password      String?\n  role          Role           @default(ADMIN)\n  type          UserType       @default(CLIENT)\n  avatar        String         @default(\"/avatars/default.png\")\n  isOnline      Boolean        @default(false)\n  twoFASecret   String?\n  twoFAEnabled  Boolean        @default(false)\n  oauthProvider String?\n  oauthId       String?\n  createdAt     DateTime       @default(now())\n  updatedAt     DateTime       @updatedAt\n  jobs          Job[]\n  refreshTokens RefreshToken[]\n\n  @@unique([oauthProvider, oauthId])\n}\n\nmodel Job {\n  id           String     @id @default(uuid())\n  title        String\n  description  String\n  budget       Int        @default(0)\n  budgetType   BudgetType @default(fixed)\n  category     String\n  clientId     String\n  status       JobStatus  @default(active)\n  createdAt    DateTime   @default(now())\n  proposals    Int        @default(0)\n  skills       String[]\n  deadline     DateTime?\n  postedByName String\n  createdBy    User       @relation(fields: [clientId], references: [id])\n}\n\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  token     String   @unique\n  userId    String\n  revoked   Boolean  @default(false)\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nenum Role {\n  ADMIN\n  USER\n  MODERATOR\n}\n\nenum UserType {\n  FREELANCER\n  CLIENT\n}\n\nenum Status {\n  active\n  suspended\n  pending\n}\n\nenum JobStatus {\n  active\n  flagged\n  closed\n}\n\nenum BudgetType {\n  hourly\n  fixed\n}\n"
 }
