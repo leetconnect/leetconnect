@@ -155,11 +155,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
       - AUTH_SERVICE_URL=http://auth:3001
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       # - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
       # - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
-    # volumes:
-    #   - ./certs:/etc/ssl/internal:ro
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   admin:
     container_name: admin
     # image_name: admin
