@@ -54,3 +54,6 @@ Leetconnect Sign In.png
 Leetconnect Sign Up.png
 profileSettings.png
 userContext.md
+
+migrations/
+*.md
