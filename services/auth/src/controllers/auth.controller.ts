@@ -296,10 +296,6 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
             title: updatedUser.title
         });
 
-        console.log("bio: ", updatedUser.bio);
-        console.log("location: ", updatedUser.location);
-        console.log("website: ", updatedUser.website);
-        console.log("title: ", updatedUser.title);
         res.status(200).json({
             message: "Profile updated successfully",
             user: updatedUser
