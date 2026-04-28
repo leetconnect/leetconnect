@@ -265,35 +265,31 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         const userId = req.user!.userId; // From JWT
         const { email, firstname, lastname, username, avatar, bio, location, website, title } = req.body;
 
+        const allowedFields = ['email', 'firstname', 'lastname', 'username', 'avatar', 'bio', 'location', 'website', 'title'];
+
+        // only include data that was sent in the request
+        const data: Record<string, any> = {};
+        for (const field of allowedFields) {
+            if (field in req.body) {
+                data[field] = req.body[field];
+            }
+        }
+        // there is nothing to update if data is empty so nothing changed
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
         // Update in the Auth Database
         const updatedUser = await prisma.user.update({
             where: { id: userId },
-            data: { 
-                email,
-                firstname, 
-                lastname, 
-                username, 
-                avatar, 
-                bio: bio,
-                location: location,
-                website: website,
-                title: title
-            },
+            data,
             select: { id: true, username: true, firstname: true, lastname: true, email: true, role: true, type: true, avatar: true, bio:true, title:true, website:true, location:true }
         });
 
         // Tell other services the profile changed
         await publishEvent(AUTH_EVENTS.USER_UPDATED, {
             id: updatedUser.id,
-            email:updatedUser.email,
-            username: updatedUser.username,
-            avatar: updatedUser.avatar,
-            firstname: updatedUser.firstname,
-            lastname: updatedUser.lastname,
-            bio: updatedUser.bio,
-            location: updatedUser.location,
-            website: updatedUser.website,
-            title: updatedUser.title
+            ...data
         });
 
         res.status(200).json({
