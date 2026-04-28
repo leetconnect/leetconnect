@@ -263,8 +263,6 @@ export const logout = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user!.userId; // From JWT
-        const { email, firstname, lastname, username, avatar, bio, location, website, title } = req.body;
-
         const allowedFields = ['email', 'firstname', 'lastname', 'username', 'avatar', 'bio', 'location', 'website', 'title'];
 
         // only include data that was sent in the request
