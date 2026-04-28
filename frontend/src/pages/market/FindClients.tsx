@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { Search, Sliders } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "@/context/userContext";
+
 
 import NumberCarousel from "@/components/market/NumberCarousel";
 import FilterModal from "@/components/market/Filters";
+import { proposalsApi } from "@/lib/api";
 
 
 type Job = {
@@ -26,51 +29,18 @@ const FindClients: React.FC = () => {
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
 
- 
-  const jobs: Job[] = [
-    {
-      id: "1",
-      title: "React Dashboard",
-      description: "Build dashboard with React & Tailwind",
-      budget: 500,
-      category: "Web Development",
-      skills: ["React", "Tailwind"],
-      client: { name: "Ahmed", rating: 4.8 },
-      createdAt: "2026-04-20",
-    },
-    {
-      id: "2",
-      title: "Mobile App UI",
-      description: "Design mobile UI using Figma",
-      budget: 300,
-      category: "UI/UX Design",
-      skills: ["Figma"],
-      client: { name: "Sara", rating: 4.6 },
-      createdAt: "2026-04-18",
-    },
-    {
-      id: "3",
-      title: "Node API",
-      description: "Build REST API with Express",
-      budget: 400,
-      category: "Backend",
-      skills: ["Node.js", "Express"],
-      client: { name: "Youssef", rating: 4.9 },
-      createdAt: "2026-04-15",
-    },
-  ];
 
-
+    const { jobs } = useAuth();
 
     const [showApply, setShowApply] = useState(false);
-    const [selectedJobId, setSelectedJobId] = useState<string | number | null>(null);
+    const [selectedJobId, setSelectedJobId] = useState<string>("");
 
     const [coverLetter, setCoverLetter] = useState("");
     const [proposedBudget, setProposedBudget] = useState("");
     const [deliveryDays, setDeliveryDays] = useState("");
 
 
-    const handleApplyClick = (jobId: string | number) => {
+    const handleApplyClick = (jobId: string ) => {
       setSelectedJobId(jobId);
       setShowApply(true);
     };
@@ -102,18 +72,17 @@ const FindClients: React.FC = () => {
 
 
   const handleSubmitProposal = async () => {
+  
     try {
-      await axios.post(
-        "http://localhost:5000/api/proposals",
+      await proposalsApi.createProposal(selectedJobId,
+        
         {
           jobId: selectedJobId,
           coverLetter,
           proposedBudget: Number(proposedBudget),
           deliveryDays: Number(deliveryDays),
-        },
-        {
-          withCredentials: true,
         }
+       
       );
 
       setShowApply(false);

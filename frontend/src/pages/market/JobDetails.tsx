@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { jobsApi } from "@/lib/api";
+import { jobsApi, proposalsApi } from "@/lib/api";
 
 type Proposal = {
   id: string;
@@ -30,40 +30,18 @@ type Job = {
   updatedAt: string;
 };
 
-export const jobsData: Job[] = [
-  {
-    id: "1",
-    title: "Senior React Developer",
-    category: "Web Development",
-    budget: 2500,
-    description: "Build a scalable frontend app using React.",
-    skills: ["React", "TypeScript", "Tailwind"],
-    status: "OPEN",
-    clientId: "client_1",
-    proposals: [
-      {
-        id: "p1",
-        freelancer: { name: "Alex" },
-        price: 2400,
-        message: "I can do this job fast",
-        createdAt: "2026-04-20T10:00:00Z",
-      },
-    ],
-    createdAt: "2026-04-20T10:00:00Z",
-    updatedAt: "2026-04-20T10:00:00Z",
-  },
-];
+
 
 const JobDetails: React.FC = () => {
   const { id } = useParams();
   const [state, setState] = useState("")
   const [job, setJob] = useState<Job | null>(null);
-const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
     const fetchJob = async () => {
       try {
         const res = await jobsApi.getJobById(id)
-
+        console.log(res)
         setJob(res.job);
       } catch (err) {
         console.error(err);
@@ -76,34 +54,26 @@ const [loading, setLoading] = useState<boolean>(true);
   }, [id]);
 
 const acceptJob = async (id: string) => {
-  // try {
-  //   const { data } = await axios.post(
-  //     `http://localhost:5000/api/proposal/accept/${id}`,
-  //     {}, 
-  //     { withCredentials: true }
-  //   );
+  try {
+    const res =   await proposalsApi.acceptProposal(id)
 
     // console.log("Accepted:", data);
-    setState("Accept");
+    setState(res.proposal);
     
-  // } catch (err) {
-  //   console.error(err);
-  // }
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const rejectJob = async (id: string) => {
-  // try {
-  //   const { data } = await axios.post(
-  //     `http://localhost:5000/api/proposal/reject/${id}`, 
-  //     {},
-  //     { withCredentials: true }
-  //   );
+  try {
+     const res =   await proposalsApi.rejectProposal(id)
 
-    // console.log("Rejected:", data);
-    setState(" Reject");
-  // } catch (err) {
-  //   console.error(err);
-  // }
+    setState(res.proposal);
+   
+  } catch (err) {
+    console.error(err);
+  }
 };
 
   // const job = jobsData.find((item) => item.id === id);
