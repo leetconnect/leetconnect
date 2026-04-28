@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/userContext';
 import { RoleBadge } from '../components/ui/RoleBadge';
 
 export const ForbiddenPage = () => {
