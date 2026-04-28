@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { Role, Status } from "../../prisma/generated/client";
+import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 export const getAllUsers = async (req: Request, res: Response) => {
 	const user = req.user;
 	
 	if(user?.role !== 'ADMIN')
-		return res.status(403).json({ message: 'Forbidden'});
+		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 		const { search, role, status } = req.query;
 		const users = await prisma.user.findMany({
@@ -39,11 +40,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
 			orderBy: { createdAt: 'desc' }
 		});
 
-		return res.status(200).json(users);
+		return res.status(StatusCodes.OK).json(users);
 
 	} catch (error) {
 		console.error('[getAllUsers]', error);
-		res.status(500).json({ message: 'Failed to fetch users'});
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch users'});
 	}
 }
 
@@ -51,11 +52,11 @@ export const getUser =  async (req: Request, res: Response) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
-		return res.status(403).json({ message: 'Forbidden'});
+		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 			const id = req.params.id as string;
 			if(!id) {
-				return res.status(400).json({ message: 'Invalid user id'});
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user id'});
 			}
 	
 			const u = await prisma.user.findUnique({
@@ -75,13 +76,13 @@ export const getUser =  async (req: Request, res: Response) => {
 			});
 	
 			if(!u) {
-				return res.status(404).json({ message: 'User not found!'});
+				return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found!'});
 			}
 	
-			return res.status(200).json(u);
+			return res.status(StatusCodes.OK).json(u);
 	} catch (error) {
 		console.error('[getUser]: ', error);
-		res.status(500).json({ message: 'Failed to fetch user'});
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch user'});
 	}
 }
 
@@ -89,11 +90,11 @@ export const editUserStatus = async (req: Request, res: Response) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
-		return res.status(403).json({ message: 'Forbidden'});
+		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 			const id = req.params.id as string;
 			if(!id) {
-				return res.status(400).json({ message: 'Invalid user id'});
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user id'});
 			}
 	
 			const { status } = req.body;
@@ -115,13 +116,13 @@ export const editUserStatus = async (req: Request, res: Response) => {
 				},
 			});
 
-			return res.status(200).json(updateUser);
+			return res.status(StatusCodes.OK).json(updateUser);
 	} catch (error: any) {
 		if ( error?.code === 'P2025') {
-			return res.status(404).json({ message: 'User not found'});
+			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
 		}
 		console.error('[updateUserStatus]: ', error);
-		res.status(500).json({ message: 'Failed to update user statsu'});
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user statsu'});
 	}
 }
 
@@ -129,11 +130,11 @@ export const editUserRole = async (req: Request, res: Response) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
-		return res.status(403).json({ message: 'Forbidden'});
+		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 		const id = req.params.id as string;
 			if(!id) {
-				return res.status(400).json({ message: 'Invalid user id'});
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user id'});
 			}
 	
 			const { role } = req.body;
@@ -155,13 +156,13 @@ export const editUserRole = async (req: Request, res: Response) => {
 				},
 			});
 
-			return res.status(200).json(updateUser);
+			return res.status(StatusCodes.OK).json(updateUser);
 	} catch (error: any) {
 		if (error?.code === 'P2025') {
-			return res.status(404).json({ message: 'User not found'});
+			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
 		}
 		console.error('[updateUserRole]: ', error);
-		res.status(500).json({ message: 'Failed to update user role'});
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user role'});
 	}
 }
 
@@ -169,22 +170,22 @@ export const deleteUser = async (req: Request, res: Response) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
-		return res.status(403).json({ message: 'Forbidden'});
+		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 		const id = req.params.id as string;
 			if(!id)
-				return res.status(400).json({ message: 'Invalid user id'})
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user id'})
 	
 			await prisma.user.delete({
 				where: { id }
 			});
 	
-			return res.status(200).json( { message: 'User deleted successfully'});
+			return res.status(StatusCodes.OK).json( { message: 'User deleted successfully'});
 	} catch (error: any) {
 		if(error?.code === 'P2025') {
-			return res.status(404).json({ message: 'User not found'});
+			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
 		}
 		console.error('[deleteUser]: ', error);
-		res.status(500).json({ message: 'Failed to delete user'});
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete user'});
 	}
 }
