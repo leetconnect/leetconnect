@@ -32,7 +32,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-6">
             <a
               href="/#features"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors "
             >
               Features
             </a>
@@ -53,9 +53,9 @@ export default function Navbar() {
             aria-label="Toggle theme"
           >
             {theme === "dark" ? (
-              <Sun className="w-5 h-5" />
+              <Sun className="w-5 h-5 hover:cursor-pointer" />
             ) : (
-              <Moon className="w-5 h-5" />
+              <Moon className="w-5 h-5 hover:cursor-pointer" />
             )}
           </button>
 
@@ -71,7 +71,11 @@ export default function Navbar() {
               <Button
                 onClick={() => navigate('/auth/sign-up')}
                 variant={isActive('/auth/sign-up') ? 'default' : 'outline'}
-                className={!location.pathname.startsWith('/auth') ? 'bg-white text-black hover:bg-white/90' : ''}
+                className={`${
+                  !location.pathname.startsWith('/auth') 
+                    ? theme === 'light' ? 'bg-primary text-white' : 'bg-white text-black'
+                    : ''
+                } cursor-pointer`}
               >
                 Sign up
               </Button>

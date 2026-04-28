@@ -200,12 +200,7 @@ export default function ProfileSettings() {
             setUser(response.user); 
             if (!user)
                 return;
-            console.log("bio: ", profileForm.bio);
-            console.log("bio: ", user.bio);
 
-            // console.log("location: ", user.location);
-            // console.log("website: ", user.website);
-            // console.log("title: ", user.title);
             setSuccessMessage('Profile updated successfully!');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
@@ -307,7 +302,7 @@ export default function ProfileSettings() {
                                 )}
                             </div>
                             <button 
-                                className="text-sm text-primary hover:text-primary/80 transition-colors"
+                                className="text-sm text-primary hover:text-primary/80 transition-colors hover:cursor-pointer"
                                 // onClick={ChangeAvatar}
                                 >
                                 Change Avatar
