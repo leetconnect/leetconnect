@@ -2,7 +2,7 @@ import { User } from "@/lib/api";
 
 export type Role = 'ADMIN' | 'MODERATOR' | 'USER';
 
-export interface AdminUser extends User {
+/* export interface AdminUser extends User {
   // id: string;
   // name: string;
   // email: string;
@@ -13,7 +13,7 @@ export interface AdminUser extends User {
   createdAt: string;
   status: 'active' | 'suspended' | 'pending';
 }
-
+ */
 export type JobStatus = 'active' | 'closed' | 'flagged';
 export type JobCategory =
   | 'Frontend Dev'
@@ -41,17 +41,7 @@ export interface Job {
   deadline?: string;
   postedByName: string;
   // postedByAvatar: string;
-	createdBy: AdminUser;
-}
-
-export interface RoleDefinition {
-  id: string;
-  name: Role;
-  label: string;
-  description: string;
-  permissions: Permission[];
-  color: string;
-  userCount: number;
+	createdBy: User;
 }
 
 export type Permission =
@@ -68,17 +58,3 @@ export type Permission =
   | 'content:edit'
   | 'content:delete'
   | 'content:moderate'
-
-export interface AuthState {
-  user: AdminUser | null;
-  token: string | null;
-  isLoading: boolean;
-}
-
-export interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  hasRole: (role: Role | Role[]) => boolean;
-  hasPermission: (permission: Permission) => boolean;
-  canAccess: (minRole: Role) => boolean;
-}
