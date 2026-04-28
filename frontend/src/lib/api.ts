@@ -176,6 +176,49 @@ export const jobsApi = {
 //     health: () => api<HealthResponse>('/market/health'),
 // };
 
+
+export interface ProposalRequest {
+    jobId: string;
+    coverLetter: string;
+    proposedBudget: number;
+    deliveryDays: number;
+}
+
+export interface Proposal {
+    id: string;
+    jobId: string;
+    freelancerId: string;
+    message: string;
+    price: number;
+    status: "PENDING" | "ACCEPTED" | "REJECTED";
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+export const proposalsApi = {
+    createProposal: (jobId: string, data: ProposalRequest) =>
+        api<Proposal>(`/market/proposals/${jobId}`, {
+            method: 'POST',
+            body: data
+        }),
+
+    getProposalsByJob: (jobId: string) =>
+        api<{ success: boolean; proposals: Proposal[] }>(
+            `/market/proposals/${jobId}`
+        ),
+
+    acceptProposal: (id: string) =>
+        api<Proposal>(`/market/proposals/accept/${id}`, {
+            method: 'PATCH'
+        }),
+
+    rejectProposal: (id: string) =>
+        api<Proposal>(`/market/proposals/reject/${id}`, {
+            method: 'PATCH'
+        }),
+};
+
 interface PaginatedMessages {
 	messages: 		Message[];
 	next_cursor:	number | null;

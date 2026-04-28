@@ -53,7 +53,8 @@ const Dashboard: React.FC = () => {
           className="bg-[#111] border border-gray-700 rounded-lg px-4 py-2 w-[400px] text-sm outline-none"
         />
 
-        <button className="bg-green-500 hover:bg-green-600 text-black font-medium px-5 py-2 rounded-lg">
+        <button onClick={() => navigate('/addjob')}
+        className="bg-green-500 hover:bg-green-600 text-black font-medium px-5 py-2 rounded-lg">
           Post a Job
         </button>
       </div>

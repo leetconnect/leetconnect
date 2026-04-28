@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
+import { Job } from "@prisma/client";
+
+
+import axios from "axios";
 
 
 const getString = (value: unknown): string | undefined => {
@@ -13,14 +17,15 @@ export const addJob = async (req: Request, res: Response) => {
     const { title, category, budget, description, skills } = req.body;
 
     const user = req.user;
-    console.log(user)
+    console.log('user-----------------', user)
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const clientId = user.userId;
-    console.log(clientId,'======================================================')
-
+    console.log(clientId,'===========')
+    console.log("HEADERS:", req.headers);
+    console.log("USER:", req.user);
     const job = await prisma.job.create({
       data: {
         title,
@@ -47,7 +52,7 @@ export const getMyJobs = async (req: Request, res: Response) => {
     }
 
     const clientId = user.userId;
-
+    console.log(user)
     const jobs = await prisma.job.findMany({
       where: { clientId },
       include: { proposals: true },
@@ -62,16 +67,51 @@ export const getMyJobs = async (req: Request, res: Response) => {
 
 
 
-export const getAllJobs = async (_req: Request, res: Response) => {
+// export const getAllJobs = async (_req: Request, res: Response) => {
+//   try {
+//     const jobs = await prisma.job.findMany({
+//       include: { proposals: true },
+//       orderBy: { createdAt: "desc" },
+//     });
+
+//     return res.json({ success: true, jobs });
+//   } catch (error: any) {
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+export const getAllJobs = async (req: Request, res: Response) => {
   try {
-    const jobs = await prisma.job.findMany({
-      include: { proposals: true },
+    const jobs: Job[] = await prisma.job.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    return res.json({ success: true, jobs });
+    const enrichedJobs = await Promise.all(
+      jobs.map(async (job: Job) => {
+        try {
+          const user = await axios.get(
+            `http://auth:5555/users/${job.clientId}`
+          );
+
+          return {...job,client: {
+              name: user.data.name,
+              email: user.data.email,
+              avatar: user.data.avatar,
+            },
+          };
+        } catch (err) {
+          // si user-service down → ne casse pas jobs
+          return {...job,client: null,};
+        }
+      }) 
+    );
+
+    return res.json({ success: true, jobs: enrichedJobs });
   } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
