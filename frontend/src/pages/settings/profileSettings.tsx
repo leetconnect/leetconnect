@@ -13,11 +13,10 @@ export default function ProfileSettings() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
-
     // Profile form state
     const [profileForm, setProfileForm] = useState({
-        firstname: '',
-        lastname: '',
+    firstname: '',
+    lastname: '',
         username: '',
         email: '',
         bio: '',
@@ -37,14 +36,13 @@ export default function ProfileSettings() {
 
 
     const [showPasswords, setShowPasswords] = useState({
-        current: false,
-        new: false,
-        confirm: false,
+    current: false,
+    new: false,
+    confirm: false,
     });
 
 
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
 
     // Load user data
     useEffect(() => {
@@ -71,6 +69,22 @@ export default function ProfileSettings() {
         }
     }, [user, authLoading]);
 
+    
+    // Store initial state for comparison
+    const [initialForm, setInitialForm] = useState(profileForm);
+
+    // Track which fields have changed
+    const getChangedFields = () => {
+    const changed: Record<string, any> = {};
+    
+    Object.keys(profileForm).forEach(key => {
+            if (profileForm[key as keyof typeof profileForm] !== initialForm[key as keyof typeof initialForm]) {
+                changed[key] = profileForm[key as keyof typeof profileForm];
+            }
+        });
+    
+        return changed;
+    };
 
     // Clear success message after 3 seconds
     useEffect(() => {
@@ -175,33 +189,28 @@ export default function ProfileSettings() {
         }
     };
 
+    // Check if form has any changes
+    const hasChanges = Object.keys(getChangedFields()).length > 0;
 
     const handleSaveProfile = async () => {
         setError(null);
-        if (!validateProfileForm()) {
+        if (!validateProfileForm() || !hasChanges) { // check if there is error in form or it didnt change
             return;
         }
 
-
         setSaving(true);
         try {
-                const response = await authApi.updateProfile({
-                    username: profileForm.username,
-                    email: profileForm.email,
-                    firstname: profileForm.firstname,
-                    lastname: profileForm.lastname,
-                    bio: profileForm.bio,
-                    location: profileForm.location,
-                    website: profileForm.website,
-                    title: profileForm.title
-                });
+                const changedFields = getChangedFields();
+                
+                // Only send changes!
+                const response = await authApi.updateProfile(changedFields);
 
-            // Update the Context immediately using the response
-            setUser(response.user); 
-            if (!user)
-                return;
-
-            setSuccessMessage('Profile updated successfully!');
+                // Update the Context immediately using the response
+                setUser(response.user); 
+                if (!user)
+                    return;
+                setInitialForm(profileForm); // Update after successful save
+                setSuccessMessage('Profile updated successfully!');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
         } finally {
@@ -696,7 +705,7 @@ export default function ProfileSettings() {
                 </Button>
                 <Button
                     onClick={handleSaveProfile}
-                    disabled={saving}
+                    disabled={!hasChanges || saving}
                     className="px-8 bg-primary hover:bg-primary/90 text-white transition-colors disabled:opacity-60"
                 >
                     {saving ? 'Saving...' : 'Save Changes'}
