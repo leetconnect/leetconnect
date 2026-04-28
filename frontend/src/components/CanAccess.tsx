@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/userContext';
 import type { Role, Permission } from '../types';
 import { Spin } from '../components/ui/Spin'
 
@@ -36,18 +36,21 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export const ProtectedRoute = ({ children, role, roles, permission, minRole, redirectTo = '/403'}: ProtectedRouteProps) => {
-  const { user, isLoading, hasRole, hasPermission, canAccess, token } = useAuth();
+export const ProtectedRoute = ({ children, role, roles, permission, minRole, redirectTo = '/admin/403'}: ProtectedRouteProps) => {
+  const { user, loading, hasRole, hasPermission, canAccess } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
-    <Spin />
+  if (loading) {
+    return (<Spin />)
 	}
 
-  if (!user || !token) {
+  if (!user) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
+	console.log("Current User:", user);
+	console.log("Required minRole:", minRole);
+	console.log("Is Allowed?:", canAccess(minRole!));
   let allowed = true;
   if (role) allowed = allowed && hasRole(role);
   if (roles) allowed = allowed && hasRole(roles);
@@ -56,6 +59,7 @@ export const ProtectedRoute = ({ children, role, roles, permission, minRole, red
 
   if (!allowed)
     return <Navigate to={redirectTo} replace />;
+
 
   return <>{children}</>;
 }
