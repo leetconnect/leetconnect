@@ -9,6 +9,13 @@ const API_BASE = '/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+// storing access token in this variable that will live in RAM so its not accessable by XSS attack :3
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+    _accessToken = token;
+};
+
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
     method?: HttpMethod;
@@ -19,7 +26,19 @@ interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
 export interface User {
     id: string;
     email: string;
-    name: string;
+    username: string; // Used 'username' instead of 'name'
+    firstname: string;
+    lastname: string;
+    avatar: string;
+    // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
+    role: 'ADMIN' | 'USER' | 'MODERATOR';
+    type: 'CLIENT' | 'FREELANCER';
+
+    // profile settings
+    bio: string;
+    location: string,
+    website: string,
+    title: string
 }
 
 export interface Job {
@@ -51,10 +70,15 @@ export interface LoginRequest {
     password: string;
 }
 
+// what the frontend sends during register 
 export interface RegisterRequest {
     email: string;
+    username: string;
+    firstname: string;
+    lastname: string;
     password: string;
-    name: string;
+    // role: 'CLIENT' | 'FREELANCER'; old
+    type: 'CLIENT' | 'FREELANCER'; // Changed from role
 }
 
 export interface AuthResponse {
@@ -62,17 +86,22 @@ export interface AuthResponse {
     user: User;
 }
 
+export interface UpdateProfileResponse {
+    message: string;
+    user: User;
+}
+
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-    const token = localStorage.getItem('token');
     const { body, headers: extraHeaders, ...restOptions } = options;
 
-    const config : RequestInit = {
+    // used httpOnly cookie instead of localstorage
+    const config: RequestInit = {
         ...restOptions,
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(_accessToken && { Authorization: `Bearer ${_accessToken}` }),
             ...extraHeaders,
-
         },
         // Stringify body if it's an object
         ...(body !== undefined && { body: JSON.stringify(body) }),
@@ -80,11 +109,34 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    // If token expired (401) refresh to get a new one
+    if (res.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+        try {
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                setAccessToken(data.accessToken);
+                // Retry the original request with the new token
+                return api<T>(path, options);
+            }
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+        }
+    }
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
+    }
+
+    // Handle 204 No Content response
+    if (res.status === 204) {
+        return Promise.resolve(undefined as unknown as T);
     }
 
     return res.json() as Promise<T>;
@@ -95,7 +147,12 @@ export const authApi = {
     login: (data: LoginRequest) => api<AuthResponse>('/auth/login', { method: 'POST', body: data }),
     register: (data: RegisterRequest) => api<AuthResponse>('/auth/register', { method: 'POST', body: data }),
     me: () => api<User>('/auth/me'),
+    refresh: () => api<{ accessToken: string }>('/auth/refresh', { method: 'POST' }),
     health: () => api<HealthResponse>('/auth/health'),
+    updateProfile: (data: any) => api<UpdateProfileResponse>('/auth/settings', { method: 'PATCH', body: data }),
+    changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
+    // 2FA
+    // remote auth
 };
 
 export const marketApi = {
