@@ -154,6 +154,8 @@ export default function ProfileSettings() {
         // added the same rules for pw as in register
         if (!passwordForm.newPassword.trim()) {
             errors.newPassword = 'New Password is required';
+        }else if (passwordForm.newPassword === passwordForm.currentPassword) {
+            errors.newPassword = 'New password must be different from your current password';
         } else if (passwordForm.newPassword.length < 8) {
             errors.newPassword = 'Password must be at least 8 characters';
         } else if (!/[A-Z]/.test(passwordForm.newPassword)) {
