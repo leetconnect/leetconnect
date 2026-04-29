@@ -1,5 +1,6 @@
 // // @adbouras
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import ChatBox from "./ChatBox";
 import ConversPanel from "./ConversPannel";
@@ -8,28 +9,13 @@ import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
 import type { Conversation } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
-
-function getUserIdFromToken(): string {
-	const token = localStorage.getItem('token');
-	// console.log('>>>>>>> token:', token);
-	if (!token) return '';
-	try {
-		const parts = token.split('.');
-		// console.log('>>>>>>> parts:', parts);
-		if (!parts[1]) return '';
-		// console.log('>>>>>>> parts[1]:', parts[1]);
-		const payload = JSON.parse(atob(parts[1]));
-		// console.log('>>>>>>> payload:', payload);
-		// console.log('>>>>>>> payload.userId:', payload.userId);
-		return payload.userId ?? '';
-	} catch {
-		return '';
-	}
-}
-
-const CURRENT_USER_ID = getUserIdFromToken();
+import { useAuth } from '../../context/userContext';
 
 export default function Messages() {
+
+	const { user } = useAuth();
+	const CURRENT_USER_ID = user?.id ?? '';
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -84,6 +70,13 @@ export default function Messages() {
 			.catch(console.error);
 	}, [CURRENT_USER_ID]);
 
+	// tell server were on /chat to suppress message notifs
+	useEffect(() => {
+		const socket = getSocket();
+		socket.emit('chat_active', true);
+		return () => { socket.emit('chat_active', false); };
+	}, []);
+
 	// when a group is created
 	const handleGroupCreated = useCallback((convers: Conversation) => {
 		setConversations((prev) => [convers, ...prev]);
@@ -96,6 +89,19 @@ export default function Messages() {
 			.then(setConversations)
 			.catch(console.error);
 	}, [CURRENT_USER_ID]);
+
+	// auto select conversation from ?conv=<id>
+	useEffect(() => {
+		const conv = searchParams.get('conv');
+		if (!conv || conversations.length === 0) return;
+		const id = parseInt(conv, 10);
+		if (Number.isNaN(id)) return;
+		if (conversations.some((c) => c.id === id)) {
+			setActiveId(id);
+			searchParams.delete('conv');
+			setSearchParams(searchParams, { replace: true });
+		}
+	}, [searchParams, conversations, setSearchParams]);
 
 	// load messages when active conversation changes
 	useEffect(() => {
@@ -167,6 +173,7 @@ export default function Messages() {
 					convers_name={convers_name}
 					convers_avatar={convers_avatar}
 					convers_username={convers_username}
+					is_direct={active_convers.type === 'Direct'}
 					messages={messages}
 					curr_user={CURRENT_USER_ID}
 					onSendMessage={handleSend}
