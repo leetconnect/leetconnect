@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
+import { notify } from '../lib/notify';
 
 function parse_user_id(value: unknown, label: string): string {
 	const val = typeof value === 'string' ? value.trim() : '';
@@ -110,6 +111,32 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const io = req.app.get('io');
 		io.to(`convers:${convers_id}`).emit('new_message', message);
 
+		const recipients = await prisma.conversMember.findMany({
+			where: { convers_id, user_id: { not: user_id } },
+			select: { user_id: true },
+		});
+		const preview = content.length > 80 ? content.slice(0, 80) + '…' : content;
+		const isOnChat = (uid: string) => {
+			const room = io.sockets.adapter.rooms.get(`user:${uid}`);
+			if (!room) return false;
+			for (const sid of room) {
+				if (io.sockets.sockets.get(sid)?.data.chatActive) return true;
+			}
+			return false;
+		};
+		await Promise.all(
+			recipients
+				.filter((r) => !isOnChat(r.user_id))
+				.map((r) =>
+					notify(io, {
+						user_id: r.user_id,
+						type: 'MESSAGE',
+						title: `New message from ${message.sender.username}`,
+						body: preview,
+					})
+				)
+		);
+
 		res.status(201).json(message);
 	} catch (err) {
 		next(err);
@@ -178,7 +205,7 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 		await prisma.message.delete({where: {id: msg_id}});
 
 		const io = req.app.get('io');
-		io.to(`covers:${convers_id}`).emit('delete_message', {
+		io.to(`convers:${convers_id}`).emit('delete_message', {
 			id: msg_id, convers_id
 		});
 

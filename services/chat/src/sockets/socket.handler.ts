@@ -27,8 +27,8 @@ export function setup_sockets(io: Server) {
 	});
 
 	io.on('connection', (socket: Socket) => {
-		const userId = socket.data.user;
-		// console.log(`socket connected: ${socket.id} (user: ${userId})`);
+		const userId = socket.data.user.userId;
+		console.log(`socket connected: ${socket.id} (user: ${userId})`);
 		socket.join(`user:${userId}`);
 
 		socket.on('join_convers', (convers_id: number) => {
@@ -36,19 +36,22 @@ export function setup_sockets(io: Server) {
 			const room = `convers:${convers_id}`;
 			socket.join(room);
 			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
-			// console.log(`socket ${socket.id} joined room ${room}`);
+			console.log(`socket ${socket.id} joined room ${room}`);
 		});
 		socket.on('leave_covers', (convers_id: number) => {
 			const room = `convers:${convers_id}`;
 			socket.leave(room);
-			// console.log(`socket ${socket.id} left room ${room}`);
+			console.log(`socket ${socket.id} left room ${room}`);
 			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
 		});
-		socket.on('disconnect', (reason: string) => {
-			// console.log(`socket disconnected: ${socket.id} (${reason})`);
+		socket.on('chat_active', (active: boolean) => {
+			socket.data.chatActive = !!active;
 		});
-		// socket.onAny((event, ...args) => {
-        //     console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
-        // });
+		socket.on('disconnect', (reason: string) => {
+			console.log(`socket disconnected: ${socket.id} (${reason})`);
+		});
+		socket.onAny((event, ...args) => {
+            console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
+        });
 	});
 }
