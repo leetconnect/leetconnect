@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '@/context/userContext';
+import {useNavigate} from "react-router-dom";
 
 export default function ProfileSettings() {
-    const { user, setUser, loading: authLoading } = useAuth();
-
+    const { user, setUser, loading: authLoading , logout} = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export default function ProfileSettings() {
     // Store initial state for comparison for changed data
     const [initialForm, setInitialForm] = useState(profileForm);
 
+    
     // Load user data
     useEffect(() => {
         if (authLoading) return;
@@ -230,6 +232,17 @@ export default function ProfileSettings() {
         }
     };
 
+    // logout 
+    const handleLogout = async () => {
+    try {
+            await logout();
+            navigate('/auth/sign-in');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
+
+    // cancel button function
     const handleCancel = () => {
         const changedFields = getChangedFields();
 
@@ -259,7 +272,7 @@ export default function ProfileSettings() {
         setSaving(true);
         try {
             await authApi.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword, });
-            setSuccessMessage('Password updated successfully!...');
+            setSuccessMessage('Password updated successfully! Redirecting to login...');
 
             // reset the form 
             setPasswordForm({
@@ -268,13 +281,15 @@ export default function ProfileSettings() {
                 confirmPassword: '',
             });
 
-            // setTimeout(() => {
-            //   logout();
-            //   navigate('/login');
-            // }   , 2000);
+            handleLogout();
 
-        } catch (err: any) {
-            setError(err.message || 'Failed to change password');
+        } 
+        catch (err: any) {
+             if (err.message === 'Current password is incorrect') 
+                setFormErrors(prev => ({ ...prev, currentPassword: 'Current password is incorrect' }));
+            else
+                setError(err.message || 'Failed to change password');
+            
         } finally {
             setSaving(false);
         }
