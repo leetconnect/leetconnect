@@ -111,10 +111,25 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const io = req.app.get('io');
 		io.to(`convers:${convers_id}`).emit('new_message', message);
 
-		const recipients = await prisma.conversMember.findMany({
-			where: { convers_id, user_id: { not: user_id } },
+		const members = await prisma.conversMember.findMany({
+			where: { convers_id },
 			select: { user_id: true },
 		});
+
+		const bump_payload = {
+			convers_id,
+			last_message: {
+				content:    message.content,
+				sender_id:  message.sender_id,
+				created_at: message.created_at,
+			},
+			updated_at: new Date(),
+		};
+		for (const m of members) {
+			io.to(`user:${m.user_id}`).emit('convers_bumped', bump_payload);
+		}
+
+		const recipients = members.filter((m) => m.user_id !== user_id);
 		const preview = content.length > 80 ? content.slice(0, 80) + '…' : content;
 		const isOnChat = (uid: string) => {
 			const room = io.sockets.adapter.rooms.get(`user:${uid}`);

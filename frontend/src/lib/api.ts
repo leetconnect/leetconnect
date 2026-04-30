@@ -278,11 +278,6 @@ export const friendApi = {
             method: 'PATCH'
         }),
 
-    cancelRequest: (request_id: number) =>
-        api<void>(`/friend/requests/${request_id}`, {
-            method: 'DELETE'
-        }),
-
     listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
     listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
     listFriends: () => api<Friend[]>('/friend/requests/friends'),

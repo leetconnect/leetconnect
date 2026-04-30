@@ -7,7 +7,7 @@ import ConversPanel from "./ConversPannel";
 import { chatApi, friendApi } from "../../lib/api";
 import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
-import type { Conversation } from "./ConverLayer";
+import type { Conversation, ConvLastMessage } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
 import { useAuth } from '../../context/userContext';
 
@@ -75,6 +75,32 @@ export default function Messages() {
 		const socket = getSocket();
 		socket.emit('chat_active', true);
 		return () => { socket.emit('chat_active', false); };
+	}, []);
+
+	// bump freshest conversation to the top
+	useEffect(() => {
+		const socket = getSocket();
+
+		const handleBumped = (data: {
+			convers_id:   number;
+			last_message: ConvLastMessage;
+			updated_at:   string;
+		}) => {
+			setConversations((prev) => {
+				const target = prev.find((c) => c.id === data.convers_id);
+				if (!target) return prev;
+				const bumped: Conversation = {
+					...target,
+					messages:   [data.last_message],
+					updated_at: data.updated_at,
+				};
+				const rest = prev.filter((c) => c.id !== data.convers_id);
+				return [bumped, ...rest];
+			});
+		};
+
+		socket.on('convers_bumped', handleBumped);
+		return () => { socket.off('convers_bumped', handleBumped); };
 	}, []);
 
 	// when a group is created
