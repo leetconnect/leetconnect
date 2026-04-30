@@ -51,7 +51,7 @@ export function setup_sockets(io: Server) {
 			console.log(`socket disconnected: ${socket.id} (${reason})`);
 		});
 		socket.onAny((event, ...args) => {
-            console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
-        });
+			console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
+		});
 	});
 }

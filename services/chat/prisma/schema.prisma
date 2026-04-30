@@ -20,6 +20,8 @@ model User {
   firstname       String          @default("")
   lastname        String          @default("")
   bio             String?         @default("")
+  location        String?
+  website         String?
   role            String          @default("USER")
   type            String          @default("CLIENT")
   avatar          String          @default("/avatars/default.png")

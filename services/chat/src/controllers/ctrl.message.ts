@@ -119,7 +119,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const bump_payload = {
 			convers_id,
 			last_message: {
-				content:    message.content,
+				content:	message.content,
 				sender_id:  message.sender_id,
 				created_at: message.created_at,
 			},

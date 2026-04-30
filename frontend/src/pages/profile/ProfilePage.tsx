@@ -99,22 +99,18 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<div className="max-w-5xl mx-auto py-8 px-4">
-			<div className="flex gap-6">
-				<div className="flex-1 min-w-0 space-y-4">
+		<div className="max-w-5xl mx-auto py-6 px-4 sm:py-8 pb-20">
+			<div className="flex flex-col lg:flex-row gap-6">
+				<div className="flex-1 min-w-0 space-y-6 sm:space-y-8">
 					<ProfileHeader
-						username={profileUser.username}
-						avatar={profileUser.avatar}
-						type={profileUser.type}
-						isOnline={profileUser.isOnline}
+						profileUser={profileUser}
 						isOwnProfile={isOwnProfile}
 						friendStatus={friendStatus}
 						friendRequestId={friendRequestId}
-						targetUserId={profileUser?.id || ''}
 						onFriendAction={handleFriendAction}
 					/>
 					<ProfileBio
-						bio={profileUser.bio}
+						profileUser={profileUser}
 						isOwnProfile={isOwnProfile}
 					/>
 				</div>

@@ -8,7 +8,7 @@ interface SidePanelProps {
 
 export default function SidePanel({ refreshTrigger, onAction }: SidePanelProps) {
 	return (
-		<div className="w-72 shrink-0 space-y-4">
+		<div className="w-full lg:w-72 lg:shrink-0 space-y-4">
 			<FriendList
 				refreshTrigger={refreshTrigger}
 				onAction={onAction}
