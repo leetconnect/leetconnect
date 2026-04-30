@@ -22,6 +22,32 @@ function check_pending(status: string): void {
 		throw new err.BadRequestError('friend request is already handled');
 }
 
+async function ensure_direct_conversation(user_a: string, user_b: string) {
+	const existing = await prisma.convers.findFirst({
+		where: {
+			type: 'Direct',
+			AND: [
+				{members: {some: {user_id: user_a}}},
+				{members: {some: {user_id: user_b}}},
+			],
+		},
+		include: {members: {select: {user_id: true}}},
+	});
+	if (existing && existing.members.length === 2)
+		return existing;
+
+	return prisma.$transaction(async (trans) => {
+		const convers = await trans.convers.create({data: {type: 'Direct'}});
+		await trans.conversMember.createMany({
+			data: [
+				{convers_id: convers.id, user_id: user_a},
+				{convers_id: convers.id, user_id: user_b},
+			],
+		});
+		return convers;
+	});
+}
+
 export async function send(req: Request, res: Response, next: NextFunction) {
 	try {
 		const sender_id   = parse_user_id(req.user?.userId, 'sender_id');
@@ -100,7 +126,9 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 			where: {id: request_id},
 			data: {status: 'ACCEPTED'}
 		});
-		// TODO: send notif
+
+		await ensure_direct_conversation(request.sender_id, request.receiver_id);
+
 		const me = await prisma.user.findUnique({
 			where: {id: user_id}, select: {username: true}
 		});
