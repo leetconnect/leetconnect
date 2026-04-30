@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, UserCheck, UserMinus, UserX, X, Clock, Loader2, MessageCircle, Settings } from 'lucide-react';
+import { UserPlus, UserCheck, UserMinus, X, Clock, Loader2, MessageCircle, Settings } from 'lucide-react';
 import { chatApi, friendApi } from '../../lib/api';
 import Avatar from '../chat/Avatar';
 
@@ -77,19 +77,6 @@ export default function ProfileHeader({
 		}
 	};
 
-	const handleCancel = async () => {
-		if (!friendRequestId) return;
-		setActionLoading(true);
-		try {
-			await friendApi.cancelRequest(friendRequestId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to cancel request:', err);
-		} finally {
-			setActionLoading(false);
-		}
-	};
-
 	const handleUnfriend = async () => {
 		setActionLoading(true);
 		try {
@@ -140,16 +127,13 @@ export default function ProfileHeader({
 
 			case 'pending_sent':
 				return (
-					<button
-						onClick={handleCancel}
-						className="group px-4 py-2 bg-secondary hover:bg-destructive/10 text-muted-foreground hover:text-destructive
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+					<div
+						className="px-4 py-2 bg-secondary text-muted-foreground
+							rounded-lg text-sm font-medium flex items-center gap-2"
 					>
-						<Clock size={14} className="group-hover:hidden" />
-						<UserX size={14} className="hidden group-hover:inline" />
-						<span className="group-hover:hidden">Request Sent</span>
-						<span className="hidden group-hover:inline">Cancel Request</span>
-					</button>
+						<Clock size={14} />
+						<span>Request Sent</span>
+					</div>
 				);
 
 			case 'pending_received':

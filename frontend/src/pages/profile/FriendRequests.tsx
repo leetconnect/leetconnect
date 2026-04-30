@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, X, Clock, Loader2, UserX, Send } from 'lucide-react';
+import { Check, X, Clock, Loader2, Send } from 'lucide-react';
 import { friendApi, type FriendRequest } from '../../lib/api';
 import Avatar from '../chat/Avatar';
 
@@ -34,13 +34,6 @@ export default function FriendRequests({ refreshTrigger, onAction }: FriendReque
 		setActionId(requestId);
 		try { await friendApi.rejectRequest(requestId); onAction(); }
 		catch (err) { console.error('Failed to reject:', err); }
-		finally { setActionId(null); }
-	};
-
-	const handleCancel = async (requestId: number) => {
-		setActionId(requestId);
-		try { await friendApi.cancelRequest(requestId); onAction(); }
-		catch (err) { console.error('Failed to cancel:', err); }
 		finally { setActionId(null); }
 	};
 
@@ -132,16 +125,7 @@ export default function FriendRequests({ refreshTrigger, onAction }: FriendReque
 											<X size={14} />
 										</button>
 									</>
-								) : (
-									<button
-										onClick={() => handleCancel(req.id)}
-										title="Cancel request"
-										className="p-1.5 text-muted-foreground hover:text-destructive
-											hover:bg-background rounded-lg transition-colors"
-									>
-										<UserX size={14} />
-									</button>
-								)}
+								) : null}
 							</div>
 						</div>
 					))}

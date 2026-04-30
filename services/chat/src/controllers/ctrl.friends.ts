@@ -246,29 +246,6 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-export async function cancel(req: Request, res: Response, next: NextFunction) {
-	try {
-		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const request	 = await prisma.friendRequest.findUnique({
-			where: {id: request_id}
-		});
-
-		if (!request)
-			throw new err.NotFoundError('friend request not found');
-		check_pending(request.status);
-		if (request.sender_id !== user_id)
-			throw new err.UnauthorizedError('only sender can cancel');
-
-		await prisma.friendRequest.delete({
-			where: {id: request_id}
-		});
-		res.status(200).json({message: 'friend request canceled'});
-	} catch (err) {
-		next(err);
-	}
-}
-
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {
 		const user_id	= parse_user_id(req.user?.userId, 'user_id');
