@@ -91,7 +91,7 @@ async function start_chat_server() {
 			} else if (channel === AUTH_EVENTS.USER_UPDATED) {
 				await prisma.user.update({
 					where: {id: data.id},
-					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio}
+					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio, location: data.location, website: data.website}
 				});
 			}
 			console.log(`user synced to chat_db: [${data.id}](${data.username})`);

@@ -234,10 +234,10 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 		const friends = users.map((u:
 			{ id: string; username: string; avatar: string; isOnline: boolean }) => ({
-				id:        u.id,
-				username:  u.username,
-				avatar:    u.avatar,
-				is_online: u.isOnline,
+				id:			u.id,
+				username:	u.username,
+				avatar:		u.avatar,
+				is_online:	u.isOnline,
 		}));
 
 		res.status(200).json(friends);

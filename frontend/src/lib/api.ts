@@ -184,6 +184,8 @@ export interface UserProfile {
     isOnline: boolean;
     type: 'CLIENT' | 'FREELANCER';
     bio?: string | null;
+    location?: string | null;
+    website?: string | null;
     createdAt: string;
 }
 
