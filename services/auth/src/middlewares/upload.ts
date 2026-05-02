@@ -8,7 +8,7 @@ export const upload = multer({
         fileSize: 2 * 1024 * 1024, // 2MB
     },
     fileFilter: (req, file, cb) => {
-        // First gate — MIME type from header (cheap, fast check)
+        // MIME type from header (cheap, fast check)
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowed.includes(file.mimetype)) {
             return cb(new Error('Invalid file type. Only JPG, PNG and WebP are allowed.'));

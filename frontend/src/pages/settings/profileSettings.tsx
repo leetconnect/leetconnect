@@ -350,14 +350,15 @@ export default function ProfileSettings() {
 
     // make a reference to inputfile
     const fileInputRef = useRef<HTMLInputElement>(null);
-
+    
     // change avatar 
     const changeAvatar = async (e: any) => {
-        
-        console.log("changing avatar")
+
         // Grab the first selected file
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // max 2MB for avatar
         if (file.size > 2 * 1024 * 1024) {
             setError('Image must be under 2MB');
             return;
@@ -394,6 +395,7 @@ export default function ProfileSettings() {
         } catch { return false; }
     };
 
+    console.log("avatar-> ", profileForm.avatar)
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -437,16 +439,20 @@ export default function ProfileSettings() {
                     <div className="flex gap-6">
                         <div className="flex flex-col items-center gap-2">
                             <div className="w-24 h-24 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-                                {profileForm.avatar ? (
+                                {profileForm.avatar && isSafeUrl(profileForm.avatar) ? (
+                                    // User has uploaded a photo → show it
                                     <img
-                                        src={isSafeUrl(profileForm.avatar) ? profileForm.avatar : '/default-avatar.png'}
+                                        src={`${profileForm.avatar}?t=${Date.now()}`}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/20 flex items-center justify-center">
-                                        <span className="text-sm text-primary/60">
-                                            {profileForm.firstname[0]}
+                                    // No avatar → THIS is the "default"
+                                    <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/20 
+                                                    flex items-center justify-center">
+                                        <span className="text-3xl font-semibold text-primary">
+                                            {profileForm.firstname?.[0]?.toUpperCase() ?? '?'
+                                            }
                                         </span>
                                     </div>
                                 )}
