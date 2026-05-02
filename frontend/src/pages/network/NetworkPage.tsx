@@ -10,10 +10,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import TabButton from './TabButton';
 import EmptyState from './EmptyState';
 import UserRow from './UserRow';
+import { usePresence, usePresenceSeed } from '@/context/PresenceProvider';
 
 type TabKey = 'connections' | 'incoming' | 'outgoing';
 
+
 export default function NetworkPage() {
+	const seed = usePresenceSeed();
 	const navigate = useNavigate();
 
 	// active tab
@@ -37,14 +40,16 @@ export default function NetworkPage() {
 			friendApi.listIncoming(),
 			friendApi.listOutgoing(),
 		])
-			.then(([f, i, o]) => {
-				setFriends(f);
-				setIncoming(i);
-				setOutgoing(o);
+			.then(([friends, incoming, outgoing]) => {
+				setFriends(friends);
+				setIncoming(incoming);
+				setOutgoing(outgoing);
+
+				seed(friends.map((friend) => ({ id: friend.id, isOnline: friend.is_online })));
 			})
 			.catch((err) => console.error('failed to load network:', err))
 			.finally(() => setLoading(false));
-	}, [refreshKey]);
+	}, [refreshKey, seed]);
 
 	const refresh = () => setRefreshKey((k) => k + 1);
 
@@ -111,7 +116,7 @@ export default function NetworkPage() {
 				</p>
 			</div>
 
-			{/* tab bar — bleeds to edges on mobile so it can scroll horizontally without clipping */}
+			{/* tab bar */}
 			<div className="flex gap-1 mb-4 sm:mb-6 border-b border-border/50 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
 				<TabButton
 					icon={Users}
@@ -156,39 +161,14 @@ export default function NetworkPage() {
 								) : (
 									<div className="space-y-1">
 										{friends.map((friend) => (
-											<UserRow
+											<ConnectionRow
 												key={friend.id}
-												name={friend.username}
-												avatar={friend.avatar}
-												online={friend.is_online}
+												friend={friend}
+												actionId={actionId}
+												onMessage={handleMessage}
+												onRemove={handleRemove}
 												onSelect={() => navigate(`/profile/${friend.username}`)}
-												subtitle={
-													<span className={friend.is_online ? 'text-primary' : 'text-muted-foreground'}>
-														{friend.is_online ? 'online' : 'offline'}
-													</span>
-												}
-											>
-												{actionId === friend.id ? (
-													<Loader2 className="h-4 w-4 animate-spin text-muted-foreground m-2" />
-												) : (
-													<>
-														<button
-															onClick={() => handleMessage(friend.id)}
-															title="Send message"
-															className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-lg transition-colors"
-														>
-															<MessageCircle size={16} />
-														</button>
-														<button
-															onClick={() => handleRemove(friend.id)}
-															title="Remove connection"
-															className="p-2 text-muted-foreground hover:text-destructive hover:bg-background rounded-lg transition-colors"
-														>
-															<UserMinus size={16} />
-														</button>
-													</>
-												)}
-											</UserRow>
+											/>
 										))}
 									</div>
 								)
@@ -280,5 +260,53 @@ export default function NetworkPage() {
 				</CardContent>
 			</Card>
 		</div>
+	);
+}
+
+interface ConnectionRowProps {
+	friend:		Friend;
+	actionId:	string | number | null;
+	onMessage:	(id: string) => void;
+	onRemove:	(id: string) => void;
+	onSelect:	() => void;
+}
+
+function ConnectionRow({ friend, actionId, onMessage, onRemove, onSelect }: ConnectionRowProps) {
+	const live = usePresence(friend.id);
+	const online = live ?? friend.is_online;
+
+	return (
+		<UserRow
+			name={friend.username}
+			avatar={friend.avatar}
+			online={online}
+			onSelect={onSelect}
+			subtitle={
+				<span className={online ? 'text-primary' : 'text-muted-foreground'}>
+					{online ? 'online' : 'offline'}
+				</span>
+			}
+		>
+			{actionId === friend.id ? (
+				<Loader2 className="h-4 w-4 animate-spin text-muted-foreground m-2" />
+			) : (
+				<>
+					<button
+						onClick={() => onMessage(friend.id)}
+						title="Send message"
+						className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-lg transition-colors"
+					>
+						<MessageCircle size={16} />
+					</button>
+					<button
+						onClick={() => onRemove(friend.id)}
+						title="Remove connection"
+						className="p-2 text-muted-foreground hover:text-destructive hover:bg-background rounded-lg transition-colors"
+					>
+						<UserMinus size={16} />
+					</button>
+				</>
+			)}
+		</UserRow>
 	);
 }
