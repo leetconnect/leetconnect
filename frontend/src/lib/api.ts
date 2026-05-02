@@ -156,6 +156,27 @@ export const authApi = {
     health: () => api<HealthResponse>('/auth/health'),
     updateProfile: (data: any) => api<UpdateProfileResponse>('/auth/settings', { method: 'PATCH', body: data }),
     changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
+    uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        const res = await fetch(`${API_BASE}/auth/avatar`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: {
+                ...(_accessToken ? { Authorization: `Bearer ${_accessToken}` } : {}),
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+            throw new Error(err.error || 'Upload failed');
+        }
+
+        return res.json();
+    },
+
     // 2FA
     // remote auth
 };
