@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
@@ -348,6 +348,51 @@ export default function ProfileSettings() {
         }
     };
 
+    // make a reference to inputfile
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // change avatar 
+    const changeAvatar = async (e: any) => {
+        
+        console.log("changing avatar")
+        // Grab the first selected file
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            setError('Image must be under 2MB');
+            return;
+        }
+        setSaving(true);
+        try {
+            const res = await authApi.uploadAvatar(file);
+            setProfileForm(prev => ({ 
+                ...prev, 
+                avatar: `${res.avatar}?t=${Date.now()}` // cache bust once
+            }));
+            setSuccessMessage("Photo updated!");
+            
+            // Refresh global state
+            const updatedUser = await authApi.me();
+            setUser({
+                ...updatedUser,
+                avatar: `${updatedUser.avatar}?t=${Date.now()}` // also bust in global state
+            });
+
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const isSafeUrl = (s: string) => {
+    if (!s) return false;
+        try {
+            const u = new URL(s, window.location.origin);
+            return ['http:', 'https:'].includes(u.protocol);
+            
+        } catch { return false; }
+    };
 
     if (loading) {
         return (
@@ -394,7 +439,7 @@ export default function ProfileSettings() {
                             <div className="w-24 h-24 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
                                 {profileForm.avatar ? (
                                     <img
-                                        src={profileForm.avatar}
+                                        src={isSafeUrl(profileForm.avatar) ? profileForm.avatar : '/default-avatar.png'}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                     />
@@ -406,9 +451,19 @@ export default function ProfileSettings() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* hide the real input and trigger it programmatically from a prettier custom button. */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={changeAvatar}
+                            />
                             <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={saving}
                                 className="text-sm text-primary hover:text-primary/80 transition-colors hover:cursor-pointer"
-                            // onClick={ChangeAvatar}
                             >
                                 Change Avatar
                             </button>

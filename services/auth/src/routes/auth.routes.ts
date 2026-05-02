@@ -5,6 +5,9 @@ import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
 import prisma from '../lib/prisma';
 import {updateProfileValidator, changePasswordValidator} from '../validators/profileValidator'
+import { upload } from '../middlewares/upload';
+import { uploadAvatar } from '../controllers/auth.controller';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
@@ -14,6 +17,15 @@ router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile );
 router.post('/change-password', authMiddleware, changePasswordValidator, validate, changePassword);
+
+// rate limiter for avatar upload
+const avatarUploadLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { error: 'Too many avatar uploads, try again later' }
+});
+
+router.post('/avatar', authMiddleware, avatarUploadLimit, upload.single('avatar'), uploadAvatar);
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
