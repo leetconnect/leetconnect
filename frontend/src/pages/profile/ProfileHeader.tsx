@@ -233,8 +233,8 @@ export default function ProfileHeader({
 								</span>
 							)}
 							{!isOwnProfile && (
-								<span className="flex items-center gap-1.5">
-									<span className={`w-3 h-2 rounded-full ${isOnline ? 'bg-primary' : 'bg-muted-foreground'}`} />
+								<span className={`flex items-center gap-1.5 ${isOnline ? 'text-primary' : 'text-muted-foreground'}`}>
+									<span className={`w-3 h-2 rounded-full ${isOnline ? 'bg-primary shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse' : 'bg-muted-foreground'}`} />
 									{isOnline ? 'Online' : 'Offline'}
 								</span>
 							)}
