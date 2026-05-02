@@ -18,7 +18,7 @@ model User {
   username        String          @unique
 
   role            String          @default("CLIENT")
-  avatar          String          @default("/avatars/default.png")
+  avatar          String          @default("")
   isOnline        Boolean         @default(false)
 
   createdAt       DateTime        @default(now())
