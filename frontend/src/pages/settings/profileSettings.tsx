@@ -14,6 +14,7 @@ export default function ProfileSettings() {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
 
     // Profile form state
     const [profileForm, setProfileForm] = useState({
@@ -351,6 +352,8 @@ export default function ProfileSettings() {
     // make a reference to inputfile
     const fileInputRef = useRef<HTMLInputElement>(null);
     
+    // reset error whenever avatar changes
+    useEffect(() => {setAvatarError(false);}, [profileForm.avatar]);
     // change avatar 
     const changeAvatar = async (e: any) => {
 
@@ -366,6 +369,7 @@ export default function ProfileSettings() {
         setSaving(true);
         try {
             const res = await authApi.uploadAvatar(file);
+            
             setProfileForm(prev => ({ 
                 ...prev, 
                 avatar: `${res.avatar}?t=${Date.now()}` // cache bust once
@@ -395,7 +399,11 @@ export default function ProfileSettings() {
         } catch { return false; }
     };
 
-    console.log("avatar-> ", profileForm.avatar)
+    const hasAvatar = (url: string) =>
+        !!url &&
+        isSafeUrl(url) &&
+        !avatarError; // read error ( 404, ...)
+    
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -439,12 +447,13 @@ export default function ProfileSettings() {
                     <div className="flex gap-6">
                         <div className="flex flex-col items-center gap-2">
                             <div className="w-24 h-24 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-                                {profileForm.avatar && isSafeUrl(profileForm.avatar) ? (
+                                {profileForm.avatar && hasAvatar(profileForm.avatar) ? (
                                     // User has uploaded a photo → show it
                                     <img
                                         src={`${profileForm.avatar}?t=${Date.now()}`}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
+                                        onError={() => setAvatarError(true)} // if image is not found display default image
                                     />
                                 ) : (
                                     // No avatar → THIS is the "default"
