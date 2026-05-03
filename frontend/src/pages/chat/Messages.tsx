@@ -8,12 +8,15 @@ import { chatApi, friendApi } from "../../lib/api";
 import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
 import type { Conversation, ConvLastMessage, ConvMember } from "./ConverLayer";
+import { displayName } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
 import { useAuth } from '../../context/userContext';
+import { usePresenceSeed } from '@/context/PresenceProvider';
 
 export default function Messages() {
 
 	const { user } = useAuth();
+	const seed = usePresenceSeed();
 	const CURRENT_USER_ID = user?.id ?? '';
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -126,9 +129,21 @@ export default function Messages() {
 	useEffect(() => {
 		if (!CURRENT_USER_ID) return;
 		chatApi.listConversations()
-			.then(setConversations)
+			.then((convers) => {
+				setConversations(convers);
+
+				const entries = convers.flatMap((c) =>
+					c.members
+						.filter((m) => m.user.isOnline !== undefined)
+						.map((m) => ({
+							id:		  m.user_id,
+							isOnline: m.user.isOnline as boolean,
+						})),
+				);
+				seed(entries);
+			})
 			.catch(console.error);
-	}, [CURRENT_USER_ID]);
+	}, [CURRENT_USER_ID, seed]);
 
 	// auto select conversation from ?conv=<id>
 	useEffect(() => {
@@ -181,9 +196,13 @@ export default function Messages() {
 
 	const active_convers = conversations.find((c) => c.id === active_id);
 
+	const other_member = active_convers?.type === 'Direct'
+		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)
+		: undefined;
+
 	const convers_name = active_convers
 		? active_convers.type === 'Direct'
-			? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.username ?? 'Unknown'
+			? (other_member?.user ? displayName(other_member.user) : 'Unknown')
 			: active_convers.name ?? 'Unnamed Group'
 		: '';
 
@@ -194,6 +213,14 @@ export default function Messages() {
 	const convers_username = active_convers?.type === 'Direct'
 		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.username
 		: undefined;
+
+	const receiver_id = active_convers?.type === 'Direct'
+		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user_id
+		: undefined;
+
+	const recv_rest_online = active_convers?.type === 'Direct'
+		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.isOnline ?? false
+		: false;
 
 	return (
 		<div className="flex fixed inset-0 top-16">
@@ -215,6 +242,8 @@ export default function Messages() {
 					convers_avatar={convers_avatar}
 					convers_username={convers_username}
 					is_direct={active_convers.type === 'Direct'}
+					receiver_id={receiver_id}
+					recv_rest_online={recv_rest_online}
 					messages={messages}
 					curr_user={CURRENT_USER_ID}
 					friends={friends}

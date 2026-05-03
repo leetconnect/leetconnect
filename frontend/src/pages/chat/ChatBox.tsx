@@ -18,6 +18,8 @@ interface ChatBoxProp {
 	has_more:			boolean;
 	loading_more:		boolean;
 	friends:			Friend[];
+	receiver_id?: 		string | undefined;
+	recv_rest_online:   boolean;
 
 	onSendMessage: 	(content: string) => void;
 	onLoadMore:		() => void;
@@ -28,9 +30,10 @@ interface ChatBoxProp {
 }
 
 export default function ChatBox({
-	convers, convers_name, convers_avatar, convers_username, is_direct, messages, curr_user,
-	friends, onSendMessage, onLoadMore, has_more, loading_more, onDeleteMessage, onBack,
-	onLeaveConversation, onMemberAdded,
+	convers, convers_name, convers_avatar, convers_username, is_direct,
+	receiver_id, recv_rest_online, messages, curr_user,
+	friends, onSendMessage, onLoadMore, has_more, loading_more,
+	onDeleteMessage, onBack, onLeaveConversation, onMemberAdded,
 }: ChatBoxProp) {
 	const [show_info, setShowInfo] = useState(false);
 	const bottom_ref = useRef<HTMLDivElement>(null);
@@ -87,7 +90,9 @@ export default function ChatBox({
 			<ChatHeader
 				name={convers_name}
 				avatar={convers_avatar}
-				is_online={is_direct}
+				is_direct={is_direct}
+				receiver_id={receiver_id}
+				recv_rest_online={recv_rest_online}
 				username={convers_username}
 				onBack={onBack}
 				onInfoClick={() => setShowInfo(true)}

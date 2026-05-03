@@ -7,6 +7,7 @@ import {
 import { chatApi, friendApi } from '../../lib/api';
 import Avatar from '../chat/Avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import { usePresence } from '@/context/PresenceProvider';
 
 interface ProfileHeaderProps {
 	profileUser:		any;
@@ -28,6 +29,9 @@ export default function ProfileHeader({
 		username, avatar, type, isOnline,
 		firstname, lastname, title, location, createdAt,
 	} = profileUser;
+
+	const live 		= usePresence(targetUserId);
+	const onlineNow = live ?? isOnline;
 
 	const fullName = [firstname, lastname].filter(Boolean).join(' ') || username;
 	const joinedDate = createdAt
@@ -233,9 +237,9 @@ export default function ProfileHeader({
 								</span>
 							)}
 							{!isOwnProfile && (
-								<span className={`flex items-center gap-1.5 ${isOnline ? 'text-primary' : 'text-muted-foreground'}`}>
-									<span className={`w-3 h-2 rounded-full ${isOnline ? 'bg-primary shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse' : 'bg-muted-foreground'}`} />
-									{isOnline ? 'Online' : 'Offline'}
+								<span className={`flex items-center gap-1.5 ${onlineNow ? 'text-primary' : 'text-muted-foreground'}`}>
+									<span className={`w-3 h-2 rounded-full ${onlineNow ? 'bg-primary shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse' : 'bg-muted-foreground'}`} />
+									{onlineNow ? 'Online' : 'Offline'}
 								</span>
 							)}
 						</div>

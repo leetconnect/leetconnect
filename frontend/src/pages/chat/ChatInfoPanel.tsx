@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, LogOut, UserPlus, Users, ExternalLink, Loader2 } from 'lucide-react';
 import Avatar from './Avatar';
 import type { Conversation, ConvMember } from './ConverLayer';
+import { displayName } from './ConverLayer';
 import type { Friend } from '../../lib/api';
 import { chatApi } from '../../lib/api';
 
@@ -154,22 +155,20 @@ function DirectPanel({
 		return <p className="text-sm text-muted-foreground text-center py-8">User not available.</p>;
 	}
 	const { user } = member;
+	const fullName = displayName(user);
+
 	return (
 		<div className="flex flex-col items-center text-center space-y-3 py-4">
-			<Avatar name={user.username} image={user.avatar} size="lg" />
+			<Avatar name={fullName} image={user.avatar} size="lg" />
 			<div>
-				<p className="text-foreground font-semibold text-lg">{user.username}</p>
-				<p className={`text-sm flex items-center justify-center gap-1.5 mt-1
-					${user.isOnline ? 'text-primary' : 'text-muted-foreground'}`}>
-					<span className={`w-2 h-2 rounded-full ${user.isOnline ? 'bg-primary' : 'bg-muted-foreground'}`} />
-					{user.isOnline ? 'Online' : 'Offline'}
-				</p>
+				<p className="text-foreground font-semibold text-lg">{fullName}</p>
+				<p className="text-sm text-muted-foreground">@{user.username}</p>
 			</div>
 			<button
 				onClick={() => onViewProfile(user.username)}
 				className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md
 					bg-primary hover:bg-primary/90 text-primary-foreground
-					text-sm font-medium transition-colors"
+					text-sm font-medium transition-colors cursor-pointer"
 			>
 				<ExternalLink size={14} />
 				View full profile
@@ -209,30 +208,39 @@ function MembersSection({
 			</h4>
 			<div className="space-y-1 max-h-48 overflow-y-auto">
 				{members.map((m) => (
-					<button
+					<MemberRow
 						key={m.user_id}
+						member={m}
+						is_self={m.user_id === curr_user}
 						onClick={() => onClickMember(m.user.username)}
-						className="w-full flex items-center gap-3 px-2 py-2 rounded-md
-							hover:bg-secondary/50 transition-colors text-left"
-					>
-						<Avatar name={m.user.username} image={m.user.avatar} size="sm" />
-						<span className="text-sm text-foreground flex-1 truncate">
-							{m.user.username}
-							{m.user_id === curr_user && (
-								<span className="text-muted-foreground ml-1">(you)</span>
-							)}
-						</span>
-						{m.user.isOnline && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
-					</button>
+					/>
 				))}
 			</div>
 		</div>
 	);
 }
 
-function InviteSection({
-	inviteable, adding, onAdd, onClose,
-}: {
+function MemberRow({ member, is_self, onClick }: {
+	member: ConvMember;
+	is_self: boolean;
+	onClick: () => void;
+}) {
+	return (
+		<button
+			onClick={onClick}
+			className="w-full flex items-center gap-3 px-3 py-2 rounded-md
+				hover:bg-secondary/50 transition-colors text-left"
+		>
+			<Avatar name={member.user.username} image={member.user.avatar} size="sm" />
+			<span className="text-sm text-foreground flex-1 truncate">
+				{member.user.username}
+				{is_self && <span className="text-muted-foreground ml-1">(you)</span>}
+			</span>
+		</button>
+	);
+}
+
+function InviteSection({inviteable, adding, onAdd, onClose }: {
 	inviteable: Friend[];
 	adding:		string | null;
 	onAdd:		(f: Friend) => void;

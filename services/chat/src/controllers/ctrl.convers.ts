@@ -46,6 +46,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 						user: {
 							select: {
 								username: true,
+								firstname: true,
+								lastname: true,
 								avatar: true,
 								isOnline: true
 							}
@@ -130,7 +132,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 						members: {
 							select: {
 								user_id: true,
-								user: { select: { username: true, avatar: true } },
+								user: { select: { username: true, firstname: true, lastname: true, avatar: true } },
 							},
 						},
 						messages: {
@@ -169,6 +171,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 							user: {
 								select: {
 									username: true,
+									firstname: true,
+									lastname: true,
 									avatar: true
 								}
 							}
@@ -280,7 +284,7 @@ export async function add_member(req: Request, res: Response, next: NextFunction
 			where: {convers_id, user_id: new_member_id},
 			select: {
 				user_id: true,
-				user: {select: {username: true, avatar: true, isOnline: true}},
+				user: {select: {username: true, firstname: true, lastname: true, avatar: true, isOnline: true}},
 			},
 		});
 		res.status(201).json(member);
