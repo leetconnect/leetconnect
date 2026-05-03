@@ -119,8 +119,9 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const skipRefresh =
     path.includes('/auth/login') ||
+    path.includes('/auth/2f/login') ||
     path.includes('/auth/refresh') ||
-    path.includes('/auth/change-password'); // ← add this
+    path.includes('/auth/change-password');
 
     // If token expired (401) refresh to get a new one
     if (res.status === 401 && !skipRefresh) {
@@ -142,6 +143,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     }
 
     if (!res.ok) {
+        console.log("status", res.status)
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
@@ -191,7 +193,7 @@ export const authApi = {
     disable2FA: (code: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code }}),
 
     // Second step of Login (If login returns requires2FA: true)
-    login2FA: (userId: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { userId, code } }),
+    login2FA: (tempToken: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { tempToken, code } }),
 
 
     // remote auth

@@ -33,6 +33,7 @@ router.post('/avatar', authMiddleware, avatarUploadLimit, upload.single('avatar'
 router.post('/2fa/setup', authMiddleware, twoFA.setup2FA);
 router.post('/2fa/verify', authMiddleware, twoFA.verifyAndEnable2FA);
 router.post('/2fa/disable', authMiddleware, twoFA.disable2FA);
+router.post('/2fa/login', twoFA.login2FA);
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
