@@ -5,6 +5,7 @@ import { useAuth } from '../../context/userContext';
 import { chatApi, friendApi } from '../../lib/api';
 import ProfileHeader from './ProfileHeader';
 import ProfileBio from './ProfileBio';
+import { usePresenceSeed } from '@/context/PresenceProvider';
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
@@ -22,6 +23,8 @@ export default function ProfilePage() {
 
 	const isOwnProfile = !username || username === currentUser?.username;
 
+	const seed = usePresenceSeed();
+
 	// fetch profile data
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -32,6 +35,7 @@ export default function ProfilePage() {
 				} else {
 					const data = await chatApi.getUser(username!);
 					setProfileUser(data);
+					seed([{ id: data.id, isOnline: data.isOnline }]);
 				}
 			} catch (err) {
 				console.error('Failed to fetch profile:', err);
@@ -41,7 +45,7 @@ export default function ProfilePage() {
 		};
 
 		if (!authLoading) fetchProfile();
-	}, [username, currentUser, authLoading, isOwnProfile]);
+	}, [username, currentUser, authLoading, isOwnProfile, seed]);
 
 	// check friend status
 	useEffect(() => {
