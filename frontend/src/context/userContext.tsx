@@ -5,7 +5,8 @@ import { authApi } from '../lib/api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => Promise<void>;
+  login: (data: any) => Promise<{ requires2FA: boolean; tempToken?: string }>;
+  login2FA: (tempToken: string, code: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -37,13 +38,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (data: any) => {
-    const res = await api<{ accessToken: string, user: User }>('/auth/login', {
-      method: 'POST',
-      body: data
-    });
-    setAccessToken(res.accessToken);
-    setUser(res.user);
+  const login = async (data: any): Promise<{ requires2FA: boolean; tempToken?: string }> => {
+    console.log("before the before")
+    
+     const res = await api<{ 
+      token?: string;
+      user?: User;
+      requires2FA?: boolean;
+      tempToken?: string;
+    }>('/auth/login', { method: 'POST', body: data });
+
+    // 2Fa required = dont set accesstoken or user yet
+    console.log("before")
+    if (res.requires2FA) {
+      return { requires2FA: true, tempToken: res.tempToken as string };
+    }
+    console.log("after")
+    
+    // normal login
+    setAccessToken(res.token!);
+    setUser(res.user!);
+    return { requires2FA: false };
+  };
+
+  const login2FA = async (tempToken: string, code: string): Promise<void> => {
+    const res = await authApi.login2FA(tempToken, code);
+    setAccessToken(res.token);
+    setUser(res.user!);
   };
 
   const register = async (data: any) => {
@@ -62,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, login2FA, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

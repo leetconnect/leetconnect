@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import prisma from '../lib/prisma';
-import { generateAccessToken, generateRefreshToken } from '../lib/token';
+import { generateAccessToken, generateRefreshToken, generateTempToken, verifyTempToken } from '../lib/token';
 import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-// import { fileTypeFromBuffer } from 'file-type';
 
 type AuthBody = {
     username?: unknown,
@@ -187,6 +186,18 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
+        // check 2FA 
+        if (user.twoFAEnabled) {
+            // create temp token for 2fa(NOT the real access token)
+            console.log("here in condition")
+            const tempToken = generateTempToken(user.id);
+            return res.status(200).json({
+                requires2FA: true,
+                tempToken,              // frontend uses this to call /2fa/login
+            });
+        }
+        console.log("no 2FA")
+        
         // generate jwt refresh and access tokens using private key :D
         const refreshToken = await prisma.refreshToken.create({
             data: {
