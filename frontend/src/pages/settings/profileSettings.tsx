@@ -970,7 +970,7 @@ export default function ProfileSettings() {
 
                         {user?.twoFAEnabled ? (
                             <div className="space-y-4">
-                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm flex items-center justify-between">
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-foreground-muted text-sm flex items-center justify-between">
                                 <span> 2FA is currently activated on your account</span>
                                 <button
                                     onClick={() => setShowDisable2FA(prev => !prev)}

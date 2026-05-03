@@ -39,8 +39,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (data: any): Promise<{ requires2FA: boolean; tempToken?: string }> => {
-    console.log("before the before")
-    
      const res = await api<{ 
       token?: string;
       user?: User;
@@ -49,11 +47,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }>('/auth/login', { method: 'POST', body: data });
 
     // 2Fa required = dont set accesstoken or user yet
-    console.log("before")
     if (res.requires2FA) {
       return { requires2FA: true, tempToken: res.tempToken as string };
     }
-    console.log("after")
     
     // normal login
     setAccessToken(res.token!);

@@ -136,11 +136,23 @@ export default function Login() {
             <main className="flex-1 flex items-center justify-center px-6 py-20">
                 <Card className="w-full max-w-md border-border/50 bg-background-elevated">
                     <CardHeader className="space-y-2 text-center">
-                    
-                        <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
-                        <CardDescription>
-                            Enter your credentials to access your workspace
-                        </CardDescription>
+                         {show2FAStep ? (
+                            // 2FA header
+                            <>
+                                <CardTitle className="text-2xl font-semibold">Two-Factor Authentication</CardTitle>
+                                <CardDescription>
+                                    Enter the 6-digit code from your authenticator app.
+                                </CardDescription>
+                            </>
+                        ) : (
+                            // Normal header
+                            <>
+                                <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
+                                <CardDescription>
+                                    Enter your credentials to access your workspace
+                                </CardDescription>
+                            </>
+                        )}
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -149,16 +161,9 @@ export default function Login() {
                                 {error}
                             </div>
                         )}
-                        {/* 2FA Step => replaces the form when requires2FA is true */}
+                        {/* 2FA Step */}
                         {show2FAStep ? (
-                            <div className="space-y-4">
-                                <div className="text-center space-y-1">
-                                    <h3 className="font-semibold text-foreground">Two-Factor Authentication</h3>
-                                    <p className="text-sm text-foreground-muted">
-                                        Enter the 6-digit code from your authenticator app.
-                                    </p>
-                                </div>
-
+                            <div className="space-y-4 space-y-4">
                                 <div className="flex flex-col gap-3">
                                     <input
                                         className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-center text-2xl tracking-[0.5em] outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
@@ -199,6 +204,7 @@ export default function Login() {
                                 </div>
                             </div>
                         ) : (
+                            <>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* Email Field */}
                             <div className="space-y-2">
@@ -284,7 +290,7 @@ export default function Login() {
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
                         </form>
-                        )}
+                        
                         
                         {/* Divider */}
                         <div className="relative">
@@ -323,8 +329,11 @@ export default function Login() {
                                 Sign Up
                             </Link>
                         </p>
+                    </>
+                    )}
                     </CardContent>
-                </Card>
+                    
+                </Card> 
             </main>
             <Footer />
         </div>
