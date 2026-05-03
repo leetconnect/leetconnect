@@ -124,6 +124,10 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   username: 'username',
+  firstname: 'firstname',
+  lastname: 'lastname',
+  status: 'status',
+  type: 'type',
   password: 'password',
   role: 'role',
   avatar: 'avatar',
@@ -133,7 +137,11 @@ exports.Prisma.UserScalarFieldEnum = {
   oauthProvider: 'oauthProvider',
   oauthId: 'oauthId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  bio: 'bio',
+  location: 'location',
+  website: 'website',
+  title: 'title'
 };
 
 exports.Prisma.RefreshTokenScalarFieldEnum = {
@@ -159,10 +167,21 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.Role = exports.$Enums.Role = {
+exports.Status = exports.$Enums.Status = {
+  active: 'active',
+  suspended: 'suspended',
+  pending: 'pending'
+};
+
+exports.UserType = exports.$Enums.UserType = {
   FREELANCER: 'FREELANCER',
-  CLIENT: 'CLIENT',
-  ADMIN: 'ADMIN'
+  CLIENT: 'CLIENT'
+};
+
+exports.Role = exports.$Enums.Role = {
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+  MODERATOR: 'MODERATOR'
 };
 
 exports.Prisma.ModelName = {

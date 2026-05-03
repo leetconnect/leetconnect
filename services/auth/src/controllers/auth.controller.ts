@@ -1,17 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
-import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
-import fs from "fs";
-import { generateAccessToken, generateRefreshToken } from '../lib/token';
+import { generateAccessToken, generateRefreshToken, generateTempToken, verifyTempToken } from '../lib/token';
 import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
-
-const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 
 type AuthBody = {
     username?: unknown,
     email?:unknown,
     password?:unknown,
+    firstname?: unknown;
+    lastname?: unknown;
+    type?: unknown; // changed from role
     role?: unknown;
 }
 
@@ -22,28 +25,32 @@ function TrimAuthInput(body: AuthBody) {
 
     const password = typeof body.password === 'string' ? body.password : '';
 
-    const role = typeof body.role === 'string' ? body.role.toUpperCase() : '';
+    const type = typeof body.type === 'string' ? body.type.toUpperCase() : '';
 
-    return { username, email, password, role};
+    const firstname = typeof body.firstname === 'string' ? body.firstname.trim() : '';
+
+    const lastname = typeof body.lastname === 'string' ? body.lastname.trim() : '';
+    
+    return { username, email, password, type, firstname, lastname};
 }
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { username, email, password, role } = TrimAuthInput(req.body);
+        const { username, email, password, type ,firstname, lastname} = TrimAuthInput(req.body);
 
         // input Validation
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !firstname || !lastname) {
             return res.status(400).json({ error: 'Missing fields' });
         }
-
-        if (role !== 'CLIENT' && role !== 'FREELANCER') {
-            return res.status(400).json({ error: 'Invalid role selection' });
+        
+        if (type !== 'CLIENT' && type !== 'FREELANCER') {
+            return res.status(400).json({ error: 'Invalid type selection' });
         }
         // Check duplicates in Postgres
         // turn into lowercase to compare in db
         const normalizedEmail = email.toLowerCase();
         const normalizedUsername = username.toLowerCase();
-
+        
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -66,7 +73,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         if (existingUser) {
             return res.status(409).json({ 
-                error: existingUser.email.toLowerCase() === email.toLowerCase() ? 'Email taken' : 'Username taken' 
+                error: existingUser.email.toLowerCase() === email.toLowerCase() ? 'Email is taken' : 'Username is taken' 
             });
         }
 
@@ -74,23 +81,29 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         const hashedPassword = await bcrypt.hash(password, 12);
 
         // // create user and its refresh token and save them both to DB , if prb happens dont save and do nothing 
-        const { user, refreshToken } = await prisma.$transaction(async (tx) => {
+        const { user, refreshToken } = await prisma.$transaction(async (tx: any) => {
             const newUser = await tx.user.create({
                 data: {
                     // ive decided to store data as it is submitted 
                     // but in login i will lowercase the data to compare that way User123@gmail.com is the same as user123@gmail.com
                     username,
                     email,     
+                    firstname,
+                    lastname,
                     password: hashedPassword,
-                    role: role as any, // client of freelancer
+                    type: type as any, // client of freelancer
+                    role: 'USER', // default role is user
                 },
                 // Ensure we don't return the password string in the response
                 select: {
                     id: true,
                     username: true,
+                    firstname: true,
+                    lastname: true,
                     email: true,
                     createdAt: true,
-                    role: true
+                    role: true,
+                    type: true,
                 }
             });
 
@@ -107,7 +120,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
         
         // generate access token
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
         
         // set HttpOnly cookie for Refresh Token
         res.cookie('refreshToken', refreshToken.token, {
@@ -123,13 +136,16 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             id: user.id,
             email: user.email,
             username: user.username,
-            role: user.role
+            firstname: user.firstname,
+            lastname: user.lastname,
+            role: user.role,
+            type: user.type
         });
 
         res.status(201).json({
             message: `Welcome to LeetConnect ${username} !`,
             accessToken,
-            user: { id: user.id, username: user.username, role: user.role }
+            user: { id: user.id, username: user.username, type: user.type, role: user.role }
         });
 
     } catch (error) {
@@ -170,6 +186,18 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
+        // check 2FA 
+        if (user.twoFAEnabled) {
+            // create temp token for 2fa(NOT the real access token)
+            console.log("here in condition")
+            const tempToken = generateTempToken(user.id);
+            return res.status(200).json({
+                requires2FA: true,
+                tempToken,              // frontend uses this to call /2fa/login
+            });
+        }
+        console.log("no 2FA")
+        
         // generate jwt refresh and access tokens using private key :D
         const refreshToken = await prisma.refreshToken.create({
             data: {
@@ -179,7 +207,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
         });
 
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
 
          res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,
@@ -192,7 +220,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         return res.status(200).json({
             message: `Welcome Back ${user.username} !`,
             accessToken,
-            user: { id: user.id, email: user.email, username: user.username, role: user.role }
+            user: { id: user.id, email: user.email, username: user.username, role: user.role, type: user.type }
         });
 
     } catch (error) {
@@ -222,10 +250,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
         }
 
         // Generate a fresh Access Token
-        const newAccessToken = generateAccessToken({ 
-            userId: storedToken.user.id, 
-            role: storedToken.user.role 
-        });
+        const newAccessToken = generateAccessToken({  userId: storedToken.user.id, role: storedToken.user.role , type: storedToken.user.type });
 
         return res.json({ accessToken: newAccessToken });
 
@@ -238,7 +263,156 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 // logout => delete refreshToken from db and from httpOnly cookie
 export const logout = async (req: Request, res: Response) => {
     const { refreshToken } = req.cookies;
+    if (!refreshToken) { // protect the token so deletemany dont wipe out all the db :)
+        res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+        return res.sendStatus(204);
+    }
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.sendStatus(204);
+};
+
+
+// user settings profile method
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.userId; // From JWT
+        const allowedFields = ['email', 'firstname', 'lastname', 'username', 'avatar', 'bio', 'location', 'website', 'title'];
+
+        // only include data that was sent in the request
+        const data: Record<string, any> = {};
+        for (const field of allowedFields) {
+            if (field in req.body) {
+                data[field] = req.body[field];
+            }
+        }
+        // there is nothing to update if data is empty so nothing changed
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
+        // Update in the Auth Database
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data,
+            select: { id: true, username: true, firstname: true, lastname: true, email: true, role: true, type: true, avatar: true, bio:true, title:true, website:true, location:true }
+        });
+
+        // Tell other services the profile changed
+        await publishEvent(AUTH_EVENTS.USER_UPDATED, {
+            id: updatedUser.id,
+            ...data
+        });
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: updatedUser
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// change password in profile settings
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.userId;
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        
+        // verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user!.password!);
+        if (!isMatch) {
+            return res.status(400).json({ 
+                error: 'Validation failed',
+                details: [{ field: 'currentPassword', message: 'Current password is incorrect' }]
+            });
+        }
+
+        if (newPassword === currentPassword) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: [{ field: 'newPassword', message: 'New password must be different from current password' }]
+            });
+        }
+        
+        // hash and save new password
+        const hashed = await bcrypt.hash(newPassword, 12);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashed }
+        });
+
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// upload avatar picture
+
+export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+        // check ACTUAL magic bytes of the buffer
+        // This catches spoofed MIME types (e.g. shell.php sent as image/jpeg)
+        const { fileTypeFromBuffer } = await import('file-type');
+        
+        const detected = await fileTypeFromBuffer(req.file.buffer);
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!detected || !allowedMimes.includes(detected.mime)) {
+            return res.status(400).json({ error: 'Invalid file content' });
+        }
+
+        const userId = req.user!.userId;
+        const hash = crypto.randomBytes(8).toString('hex');
+        const uploadDir = path.join(process.cwd(), 'uploads/avatars');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        const filename = `avatar-${userId}-${hash}.webp`;
+        const uploadPath = path.join(uploadDir, filename);
+
+        // Get old avatar BEFORE updating
+        const existingUser = await prisma.user.findUnique({ 
+            where: { id: userId },
+            select: { avatar: true }
+        });
+
+        //  Sharp re-encode destroys any hidden payloads
+        try {
+            await sharp(req.file.buffer)
+                .resize(250, 250)
+                .webp({ quality: 80 })
+                .toFile(uploadPath);
+        } catch (err){
+            // console.error('Sharp error:', err); 
+            return res.status(400).json({ error: 'Invalid or corrupted image file' });
+        }
+
+        const avatarUrl = `/uploads/avatars/${filename}`;
+
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { avatar: avatarUrl },
+        });
+
+         // Delete old avatar AFTER successful DB update
+        if (existingUser?.avatar && existingUser.avatar.startsWith('/uploads/avatars/')) {
+            const oldFilename = path.basename(existingUser.avatar.split('?')[0] as string);
+            const oldPath = path.join(uploadDir, oldFilename);
+            fs.unlink(oldPath, (err) => {
+                if (err) console.warn('Could not delete old avatar:', err.message);
+            });
+        }
+
+        await publishEvent(AUTH_EVENTS.USER_UPDATED, {
+            id: user.id,
+            avatar: avatarUrl
+        });
+
+        res.json({ message: 'Avatar updated', avatar: avatarUrl });
+    } catch (error) {
+        next(error);
+    }
 };

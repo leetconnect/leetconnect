@@ -29,18 +29,43 @@ export type RefreshToken = $Result.DefaultSelection<Prisma.$RefreshTokenPayload>
  */
 export namespace $Enums {
   export const Role: {
-  FREELANCER: 'FREELANCER',
-  CLIENT: 'CLIENT',
-  ADMIN: 'ADMIN'
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+  MODERATOR: 'MODERATOR'
 };
 
 export type Role = (typeof Role)[keyof typeof Role]
+
+
+export const UserType: {
+  FREELANCER: 'FREELANCER',
+  CLIENT: 'CLIENT'
+};
+
+export type UserType = (typeof UserType)[keyof typeof UserType]
+
+
+export const Status: {
+  active: 'active',
+  suspended: 'suspended',
+  pending: 'pending'
+};
+
+export type Status = (typeof Status)[keyof typeof Status]
 
 }
 
 export type Role = $Enums.Role
 
 export const Role: typeof $Enums.Role
+
+export type UserType = $Enums.UserType
+
+export const UserType: typeof $Enums.UserType
+
+export type Status = $Enums.Status
+
+export const Status: typeof $Enums.Status
 
 /**
  * ##  Prisma Client ʲˢ
@@ -1019,6 +1044,10 @@ export namespace Prisma {
     id: string | null
     email: string | null
     username: string | null
+    firstname: string | null
+    lastname: string | null
+    status: $Enums.Status | null
+    type: $Enums.UserType | null
     password: string | null
     role: $Enums.Role | null
     avatar: string | null
@@ -1029,12 +1058,20 @@ export namespace Prisma {
     oauthId: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    bio: string | null
+    location: string | null
+    website: string | null
+    title: string | null
   }
 
   export type UserMaxAggregateOutputType = {
     id: string | null
     email: string | null
     username: string | null
+    firstname: string | null
+    lastname: string | null
+    status: $Enums.Status | null
+    type: $Enums.UserType | null
     password: string | null
     role: $Enums.Role | null
     avatar: string | null
@@ -1045,12 +1082,20 @@ export namespace Prisma {
     oauthId: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    bio: string | null
+    location: string | null
+    website: string | null
+    title: string | null
   }
 
   export type UserCountAggregateOutputType = {
     id: number
     email: number
     username: number
+    firstname: number
+    lastname: number
+    status: number
+    type: number
     password: number
     role: number
     avatar: number
@@ -1061,6 +1106,10 @@ export namespace Prisma {
     oauthId: number
     createdAt: number
     updatedAt: number
+    bio: number
+    location: number
+    website: number
+    title: number
     _all: number
   }
 
@@ -1069,6 +1118,10 @@ export namespace Prisma {
     id?: true
     email?: true
     username?: true
+    firstname?: true
+    lastname?: true
+    status?: true
+    type?: true
     password?: true
     role?: true
     avatar?: true
@@ -1079,12 +1132,20 @@ export namespace Prisma {
     oauthId?: true
     createdAt?: true
     updatedAt?: true
+    bio?: true
+    location?: true
+    website?: true
+    title?: true
   }
 
   export type UserMaxAggregateInputType = {
     id?: true
     email?: true
     username?: true
+    firstname?: true
+    lastname?: true
+    status?: true
+    type?: true
     password?: true
     role?: true
     avatar?: true
@@ -1095,12 +1156,20 @@ export namespace Prisma {
     oauthId?: true
     createdAt?: true
     updatedAt?: true
+    bio?: true
+    location?: true
+    website?: true
+    title?: true
   }
 
   export type UserCountAggregateInputType = {
     id?: true
     email?: true
     username?: true
+    firstname?: true
+    lastname?: true
+    status?: true
+    type?: true
     password?: true
     role?: true
     avatar?: true
@@ -1111,6 +1180,10 @@ export namespace Prisma {
     oauthId?: true
     createdAt?: true
     updatedAt?: true
+    bio?: true
+    location?: true
+    website?: true
+    title?: true
     _all?: true
   }
 
@@ -1190,6 +1263,10 @@ export namespace Prisma {
     id: string
     email: string
     username: string
+    firstname: string
+    lastname: string
+    status: $Enums.Status
+    type: $Enums.UserType
     password: string | null
     role: $Enums.Role
     avatar: string
@@ -1200,6 +1277,10 @@ export namespace Prisma {
     oauthId: string | null
     createdAt: Date
     updatedAt: Date
+    bio: string | null
+    location: string | null
+    website: string | null
+    title: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1223,6 +1304,10 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     username?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    status?: boolean
+    type?: boolean
     password?: boolean
     role?: boolean
     avatar?: boolean
@@ -1233,6 +1318,10 @@ export namespace Prisma {
     oauthId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    bio?: boolean
+    location?: boolean
+    website?: boolean
+    title?: boolean
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -1241,6 +1330,10 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     username?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    status?: boolean
+    type?: boolean
     password?: boolean
     role?: boolean
     avatar?: boolean
@@ -1251,12 +1344,20 @@ export namespace Prisma {
     oauthId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    bio?: boolean
+    location?: boolean
+    website?: boolean
+    title?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     email?: boolean
     username?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    status?: boolean
+    type?: boolean
     password?: boolean
     role?: boolean
     avatar?: boolean
@@ -1267,12 +1368,20 @@ export namespace Prisma {
     oauthId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    bio?: boolean
+    location?: boolean
+    website?: boolean
+    title?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
     email?: boolean
     username?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    status?: boolean
+    type?: boolean
     password?: boolean
     role?: boolean
     avatar?: boolean
@@ -1283,9 +1392,13 @@ export namespace Prisma {
     oauthId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    bio?: boolean
+    location?: boolean
+    website?: boolean
+    title?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "username" | "password" | "role" | "avatar" | "isOnline" | "twoFASecret" | "twoFAEnabled" | "oauthProvider" | "oauthId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "username" | "firstname" | "lastname" | "status" | "type" | "password" | "role" | "avatar" | "isOnline" | "twoFASecret" | "twoFAEnabled" | "oauthProvider" | "oauthId" | "createdAt" | "updatedAt" | "bio" | "location" | "website" | "title", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -1302,6 +1415,10 @@ export namespace Prisma {
       id: string
       email: string
       username: string
+      firstname: string
+      lastname: string
+      status: $Enums.Status
+      type: $Enums.UserType
       password: string | null
       role: $Enums.Role
       avatar: string
@@ -1312,6 +1429,10 @@ export namespace Prisma {
       oauthId: string | null
       createdAt: Date
       updatedAt: Date
+      bio: string | null
+      location: string | null
+      website: string | null
+      title: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -1739,6 +1860,10 @@ export namespace Prisma {
     readonly id: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly username: FieldRef<"User", 'String'>
+    readonly firstname: FieldRef<"User", 'String'>
+    readonly lastname: FieldRef<"User", 'String'>
+    readonly status: FieldRef<"User", 'Status'>
+    readonly type: FieldRef<"User", 'UserType'>
     readonly password: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'Role'>
     readonly avatar: FieldRef<"User", 'String'>
@@ -1749,6 +1874,10 @@ export namespace Prisma {
     readonly oauthId: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly bio: FieldRef<"User", 'String'>
+    readonly location: FieldRef<"User", 'String'>
+    readonly website: FieldRef<"User", 'String'>
+    readonly title: FieldRef<"User", 'String'>
   }
     
 
@@ -3278,6 +3407,10 @@ export namespace Prisma {
     id: 'id',
     email: 'email',
     username: 'username',
+    firstname: 'firstname',
+    lastname: 'lastname',
+    status: 'status',
+    type: 'type',
     password: 'password',
     role: 'role',
     avatar: 'avatar',
@@ -3287,7 +3420,11 @@ export namespace Prisma {
     oauthProvider: 'oauthProvider',
     oauthId: 'oauthId',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    bio: 'bio',
+    location: 'location',
+    website: 'website',
+    title: 'title'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -3345,6 +3482,34 @@ export namespace Prisma {
    * Reference to a field of type 'String[]'
    */
   export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Status'
+   */
+  export type EnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status'>
+    
+
+
+  /**
+   * Reference to a field of type 'Status[]'
+   */
+  export type ListEnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserType'
+   */
+  export type EnumUserTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserType'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserType[]'
+   */
+  export type ListEnumUserTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserType[]'>
     
 
 
@@ -3407,6 +3572,10 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     username?: StringFilter<"User"> | string
+    firstname?: StringFilter<"User"> | string
+    lastname?: StringFilter<"User"> | string
+    status?: EnumStatusFilter<"User"> | $Enums.Status
+    type?: EnumUserTypeFilter<"User"> | $Enums.UserType
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     avatar?: StringFilter<"User"> | string
@@ -3417,6 +3586,10 @@ export namespace Prisma {
     oauthId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    bio?: StringNullableFilter<"User"> | string | null
+    location?: StringNullableFilter<"User"> | string | null
+    website?: StringNullableFilter<"User"> | string | null
+    title?: StringNullableFilter<"User"> | string | null
     refreshTokens?: RefreshTokenListRelationFilter
   }
 
@@ -3424,6 +3597,10 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     username?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    status?: SortOrder
+    type?: SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
     avatar?: SortOrder
@@ -3434,6 +3611,10 @@ export namespace Prisma {
     oauthId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    bio?: SortOrderInput | SortOrder
+    location?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    title?: SortOrderInput | SortOrder
     refreshTokens?: RefreshTokenOrderByRelationAggregateInput
   }
 
@@ -3445,6 +3626,10 @@ export namespace Prisma {
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
+    firstname?: StringFilter<"User"> | string
+    lastname?: StringFilter<"User"> | string
+    status?: EnumStatusFilter<"User"> | $Enums.Status
+    type?: EnumUserTypeFilter<"User"> | $Enums.UserType
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     avatar?: StringFilter<"User"> | string
@@ -3455,6 +3640,10 @@ export namespace Prisma {
     oauthId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    bio?: StringNullableFilter<"User"> | string | null
+    location?: StringNullableFilter<"User"> | string | null
+    website?: StringNullableFilter<"User"> | string | null
+    title?: StringNullableFilter<"User"> | string | null
     refreshTokens?: RefreshTokenListRelationFilter
   }, "id" | "email" | "username" | "oauthProvider_oauthId">
 
@@ -3462,6 +3651,10 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     username?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    status?: SortOrder
+    type?: SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
     avatar?: SortOrder
@@ -3472,6 +3665,10 @@ export namespace Prisma {
     oauthId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    bio?: SortOrderInput | SortOrder
+    location?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    title?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -3484,6 +3681,10 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
     username?: StringWithAggregatesFilter<"User"> | string
+    firstname?: StringWithAggregatesFilter<"User"> | string
+    lastname?: StringWithAggregatesFilter<"User"> | string
+    status?: EnumStatusWithAggregatesFilter<"User"> | $Enums.Status
+    type?: EnumUserTypeWithAggregatesFilter<"User"> | $Enums.UserType
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     avatar?: StringWithAggregatesFilter<"User"> | string
@@ -3494,6 +3695,10 @@ export namespace Prisma {
     oauthId?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    bio?: StringNullableWithAggregatesFilter<"User"> | string | null
+    location?: StringNullableWithAggregatesFilter<"User"> | string | null
+    website?: StringNullableWithAggregatesFilter<"User"> | string | null
+    title?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type RefreshTokenWhereInput = {
@@ -3560,6 +3765,10 @@ export namespace Prisma {
     id?: string
     email: string
     username: string
+    firstname?: string
+    lastname?: string
+    status?: $Enums.Status
+    type?: $Enums.UserType
     password?: string | null
     role?: $Enums.Role
     avatar?: string
@@ -3570,6 +3779,10 @@ export namespace Prisma {
     oauthId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    bio?: string | null
+    location?: string | null
+    website?: string | null
+    title?: string | null
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
   }
 
@@ -3577,6 +3790,10 @@ export namespace Prisma {
     id?: string
     email: string
     username: string
+    firstname?: string
+    lastname?: string
+    status?: $Enums.Status
+    type?: $Enums.UserType
     password?: string | null
     role?: $Enums.Role
     avatar?: string
@@ -3587,6 +3804,10 @@ export namespace Prisma {
     oauthId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    bio?: string | null
+    location?: string | null
+    website?: string | null
+    title?: string | null
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -3594,6 +3815,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -3604,6 +3829,10 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
   }
 
@@ -3611,6 +3840,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -3621,6 +3854,10 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -3628,6 +3865,10 @@ export namespace Prisma {
     id?: string
     email: string
     username: string
+    firstname?: string
+    lastname?: string
+    status?: $Enums.Status
+    type?: $Enums.UserType
     password?: string | null
     role?: $Enums.Role
     avatar?: string
@@ -3638,12 +3879,20 @@ export namespace Prisma {
     oauthId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    bio?: string | null
+    location?: string | null
+    website?: string | null
+    title?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -3654,12 +3903,20 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -3670,6 +3927,10 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type RefreshTokenCreateInput = {
@@ -3749,6 +4010,20 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type EnumStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusFilter<$PrismaModel> | $Enums.Status
+  }
+
+  export type EnumUserTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserType | EnumUserTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserTypeFilter<$PrismaModel> | $Enums.UserType
+  }
+
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -3811,6 +4086,10 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     username?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    status?: SortOrder
+    type?: SortOrder
     password?: SortOrder
     role?: SortOrder
     avatar?: SortOrder
@@ -3821,12 +4100,20 @@ export namespace Prisma {
     oauthId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
+    website?: SortOrder
+    title?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
     username?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    status?: SortOrder
+    type?: SortOrder
     password?: SortOrder
     role?: SortOrder
     avatar?: SortOrder
@@ -3837,12 +4124,20 @@ export namespace Prisma {
     oauthId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
+    website?: SortOrder
+    title?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
     username?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    status?: SortOrder
+    type?: SortOrder
     password?: SortOrder
     role?: SortOrder
     avatar?: SortOrder
@@ -3853,6 +4148,10 @@ export namespace Prisma {
     oauthId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
+    website?: SortOrder
+    title?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -3871,6 +4170,26 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type EnumStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusWithAggregatesFilter<$PrismaModel> | $Enums.Status
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStatusFilter<$PrismaModel>
+    _max?: NestedEnumStatusFilter<$PrismaModel>
+  }
+
+  export type EnumUserTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserType | EnumUserTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserTypeWithAggregatesFilter<$PrismaModel> | $Enums.UserType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserTypeFilter<$PrismaModel>
+    _max?: NestedEnumUserTypeFilter<$PrismaModel>
   }
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -3973,6 +4292,14 @@ export namespace Prisma {
     set?: string
   }
 
+  export type EnumStatusFieldUpdateOperationsInput = {
+    set?: $Enums.Status
+  }
+
+  export type EnumUserTypeFieldUpdateOperationsInput = {
+    set?: $Enums.UserType
+  }
+
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
   }
@@ -4045,6 +4372,20 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type NestedEnumStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusFilter<$PrismaModel> | $Enums.Status
+  }
+
+  export type NestedEnumUserTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserType | EnumUserTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserTypeFilter<$PrismaModel> | $Enums.UserType
+  }
+
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -4108,6 +4449,26 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type NestedEnumStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Status[] | ListEnumStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusWithAggregatesFilter<$PrismaModel> | $Enums.Status
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStatusFilter<$PrismaModel>
+    _max?: NestedEnumStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumUserTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserType | EnumUserTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserType[] | ListEnumUserTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserTypeWithAggregatesFilter<$PrismaModel> | $Enums.UserType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserTypeFilter<$PrismaModel>
+    _max?: NestedEnumUserTypeFilter<$PrismaModel>
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -4228,6 +4589,10 @@ export namespace Prisma {
     id?: string
     email: string
     username: string
+    firstname?: string
+    lastname?: string
+    status?: $Enums.Status
+    type?: $Enums.UserType
     password?: string | null
     role?: $Enums.Role
     avatar?: string
@@ -4238,12 +4603,20 @@ export namespace Prisma {
     oauthId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    bio?: string | null
+    location?: string | null
+    website?: string | null
+    title?: string | null
   }
 
   export type UserUncheckedCreateWithoutRefreshTokensInput = {
     id?: string
     email: string
     username: string
+    firstname?: string
+    lastname?: string
+    status?: $Enums.Status
+    type?: $Enums.UserType
     password?: string | null
     role?: $Enums.Role
     avatar?: string
@@ -4254,6 +4627,10 @@ export namespace Prisma {
     oauthId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    bio?: string | null
+    location?: string | null
+    website?: string | null
+    title?: string | null
   }
 
   export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -4276,6 +4653,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -4286,12 +4667,20 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateWithoutRefreshTokensInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
+    firstname?: StringFieldUpdateOperationsInput | string
+    lastname?: StringFieldUpdateOperationsInput | string
+    status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
+    type?: EnumUserTypeFieldUpdateOperationsInput | $Enums.UserType
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     avatar?: StringFieldUpdateOperationsInput | string
@@ -4302,6 +4691,10 @@ export namespace Prisma {
     oauthId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type RefreshTokenCreateManyUserInput = {

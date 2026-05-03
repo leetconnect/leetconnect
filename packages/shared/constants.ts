@@ -6,13 +6,19 @@
 // services: internal urls to call other services via rest
 
 export const ROLES = {
-    CLIENT: 'CLIENT',
-    FREELANCER: 'FREELANCER',
-    ADMIN: 'ADMIN',
-  } as const;
-  
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+  MODERATOR: 'MODERATOR',
+} as const;
+
+export const USER_TYPES = {
+  CLIENT: 'CLIENT',
+  FREELANCER: 'FREELANCER',
+} as const;
+
 export const AUTH_EVENTS = {
   USER_REGISTERED: 'user.registered',
+  USER_UPDATED: 'user.updated',
 };
 
 // The data sent to other services
@@ -69,6 +75,7 @@ export interface UserRegisteredPayload {
   }
 
 export type Role = typeof ROLES[keyof typeof ROLES];
+export type UserType = typeof USER_TYPES[keyof typeof USER_TYPES];
 export type JobStatus = typeof JOB_STATUS[keyof typeof JOB_STATUS];
 export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS];
 export type ContractStatus = typeof CONTRACT_STATUS[keyof typeof CONTRACT_STATUS];

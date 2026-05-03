@@ -2,6 +2,9 @@
 // All requests go through Nginx proxy (relative paths)
 // Automatically attaches JWT token from localStorage
 
+import type { Conversation } from '../pages/chat/ConverLayer';
+import type { Message } from '../pages/chat/MessageLayer';
+
 const API_BASE = '/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -24,9 +27,24 @@ export interface User {
     id: string;
     email: string;
     username: string; // Used 'username' instead of 'name'
-    firstName: string;
-    lastName: string;
-    role: 'CLIENT' | 'FREELANCER' | 'ADMIN';
+    firstname: string;
+    lastname: string;
+    avatar: string;
+    // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
+    role: 'ADMIN' | 'USER' | 'MODERATOR';
+    type: 'CLIENT' | 'FREELANCER';
+
+    // profile settings
+    bio: string;
+    location: string,
+    website: string,
+    title: string
+    twoFAEnabled: boolean;
+}
+
+// Response when starting 2FA setup
+export interface TwoFASetupResponse {
+    qrCode: string;
 }
 
 export interface Job {
@@ -36,18 +54,18 @@ export interface Job {
     createdAt: string;
 }
 
-export interface Conversation {
-    id: string;
-    title: string;
-    updatedAt: string;
-}
+// export interface Conversation {
+//     id: string;
+//     title: string;
+//     updatedAt: string;
+// }
 
-export interface Message {
-    id: string;
-    conversationId: string;
-    content: string;
-    createdAt: string;
-}
+// export interface Message {
+//     id: string;
+//     conversationId: string;
+//     content: string;
+//     createdAt: string;
+// }
 
 export interface HealthResponse {
     status: 'ok' | 'degraded' | 'down';
@@ -62,14 +80,22 @@ export interface LoginRequest {
 export interface RegisterRequest {
     email: string;
     username: string;
-    firstName: string;
-    lastName: string;
+    firstname: string;
+    lastname: string;
     password: string;
-    role: 'CLIENT' | 'FREELANCER';
+    // role: 'CLIENT' | 'FREELANCER'; old
+    type: 'CLIENT' | 'FREELANCER'; // Changed from role
 }
 
 export interface AuthResponse {
     token: string;
+    user: User;
+    requires2FA?: boolean; // If true, frontend must show the 6-digit code input
+    userId?: string;       // Needed to identify which user is finishing 2FA login
+}
+
+export interface UpdateProfileResponse {
+    message: string;
     user: User;
 }
 
@@ -77,9 +103,9 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     const { body, headers: extraHeaders, ...restOptions } = options;
 
     // used httpOnly cookie instead of localstorage
-    const config : RequestInit = {
+    const config: RequestInit = {
         ...restOptions,
-        credentials: 'include', 
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...(_accessToken && { Authorization: `Bearer ${_accessToken}` }),
@@ -91,25 +117,41 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
-    // If token expired (401) refresh to get a new one
-    if (res.status === 401 && !path.includes('/auth/login')) {
-        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, { 
-            method: 'POST', 
-            credentials: 'include' 
-        });
+    const skipRefresh =
+    path.includes('/auth/login') ||
+    path.includes('/auth/2f/login') ||
+    path.includes('/auth/refresh') ||
+    path.includes('/auth/change-password');
 
-        if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            setAccessToken(data.accessToken);
-            // Retry the original request with the new token
-            return api<T>(path, options);
+    // If token expired (401) refresh to get a new one
+    if (res.status === 401 && !skipRefresh) {
+        try {
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                setAccessToken(data.accessToken);
+                // Retry the original request with the new token
+                return api<T>(path, options);
+            }
+        } catch (error) {
+            console.error('Token refresh failed:', error);
         }
     }
 
     if (!res.ok) {
+        console.log("status", res.status)
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
+    }
+
+    // Handle 204 No Content response
+    if (res.status === 204) {
+        return Promise.resolve(undefined as unknown as T);
     }
 
     return res.json() as Promise<T>;
@@ -120,7 +162,41 @@ export const authApi = {
     login: (data: LoginRequest) => api<AuthResponse>('/auth/login', { method: 'POST', body: data }),
     register: (data: RegisterRequest) => api<AuthResponse>('/auth/register', { method: 'POST', body: data }),
     me: () => api<User>('/auth/me'),
+    refresh: () => api<{ accessToken: string }>('/auth/refresh', { method: 'POST' }),
     health: () => api<HealthResponse>('/auth/health'),
+    updateProfile: (data: any) => api<UpdateProfileResponse>('/auth/settings', { method: 'PATCH', body: data }),
+    changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
+    uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        const res = await fetch(`${API_BASE}/auth/avatar`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: {
+                ...(_accessToken ? { Authorization: `Bearer ${_accessToken}` } : {}),
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+            throw new Error(err.error || 'Upload failed');
+        }
+
+        return res.json();
+    },
+
+    // 2FA
+    setup2FA: () =>api<TwoFASetupResponse>('/auth/2fa/setup', { method: 'POST'}),
+    verify2FA: (code: string) =>api<User>('/auth/2fa/verify', { method: 'POST',  body: { code }}),
+    disable2FA: (code: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code }}),
+
+    // Second step of Login (If login returns requires2FA: true)
+    login2FA: (tempToken: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { tempToken, code } }),
+
+
+    // remote auth
 };
 
 export const marketApi = {
@@ -130,11 +206,119 @@ export const marketApi = {
     health: () => api<HealthResponse>('/market/health'),
 };
 
+interface PaginatedMessages {
+	messages: 		Message[];
+	next_cursor:	number | null;
+}
+
+interface CreateConversPayload {
+    type: 'Direct' | 'Group';
+    name?: string;
+    member_ids: string[];
+}
+
 export const chatApi = {
-    getConversations: () => api<Conversation[]>('/chat/conversations'),
-    getMessages: (convId: string) => api<Message[]>(`/chat/conversations/${convId}/messages`),
-    health: () => api<HealthResponse>('/chat/health'),
+	// ---------------------- Conversations ----------------------
+	listConversations: () =>
+		api<Conversation[]>(`/chat/convers`),
+
+	getConversation: (convers_id: number) =>
+		api<Conversation>(`/chat/convers/${convers_id}`),
+
+	leaveConversation: (convers_id: number, user_id: string) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}`, {
+			method: 'DELETE',
+			body: { user_id: user_id },
+		}),
+
+	// ---------------------- Messages ----------------------
+	listMessages: (convers_id: number, limit = 20, cursor?: number) => {
+		let url = `/chat/convers/${convers_id}/messages?limit=${limit}`;
+		if (cursor)
+            url += `&cursor=${cursor}`;
+		return api<PaginatedMessages>(url);
+	},
+
+	sendMessage: (convers_id: number, content: string) =>
+		api<Message>(`/chat/convers/${convers_id}/messages`, {
+			method: 'POST',
+			body: { content: content },
+		}),
+
+	getMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			body: { msg_id: msg_id },
+		}),
+
+	deleteMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			method: 'DELETE'
+		}),
+
+	// ---------------------- Convers ----------------------
+        createConversation: (data: CreateConversPayload) =>
+        api<Conversation>('/chat/convers', {
+            method: 'POST',
+            body: {
+                type: data.type,
+                name: data.name,
+                member_ids: data.member_ids,
+            },
+        }),
+	// ---------------------- Health ----------------------
+	health: () => api<HealthResponse>('/chat/health'),
 };
+
+export interface FriendRequest {
+    id:             number;
+    sender_id:      string;
+    receiver_id:    string;
+    status:         'PENDING' | 'ACCEPTED' | 'REJECTED';
+    created_at:     string;
+    updated_at:     string;
+
+    sender?:   {id: string, username: string, avatar: string};
+    receiver?: {id: string, username: string, avatar: string};
+}
+
+export interface Friend {
+    id:         string;
+    username:   string;
+    avatar:     string;
+    is_online:  boolean;
+}
+
+export const friendApi = {
+    sendRequest: (receiver_id: string) =>
+        api<FriendRequest>('/friend/requests', {
+            method: 'POST',
+            body: {receiver_id}
+        }),
+    
+    acceptRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/accept`, {
+            method: 'PATCH'
+        }),
+
+    rejectRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/reject`, {
+            method: 'PATCH'
+        }),
+
+    cancelRequest: (request_id: number) =>
+        api<void>(`/friend/requests/${request_id}`, {
+            method: 'DELETE'
+        }),
+
+    listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
+    listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
+    listFriends: () => api<Friend[]>('/friend/requests/friends'),
+
+    removeFriend: (friend_id: string) => api<void>('/friend/requests/friends', {
+            method: 'DELETE',
+            body: {friend_id},
+        })
+}
 
 export const analyticsApi = {
     getDashboard: () => api('/analytics/dashboard'),
