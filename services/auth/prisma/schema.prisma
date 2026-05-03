@@ -13,10 +13,15 @@ model User {
   email          String       @unique
   username       String       @unique
 
+  firstname     String         @default("")
+  lastname      String         @default("")
+  status        Status         @default(active)
+  type          UserType       @default(CLIENT)
+
   // Optional password for OAuth users
   password       String?
-  role           Role         @default(CLIENT)
-  avatar         String       @default("/avatars/default.png")
+  role           Role         @default(USER)
+  avatar         String       @default("")
   
   // Presence state
   isOnline       Boolean      @default(false)
@@ -37,14 +42,39 @@ model User {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
+  // for profile settings 
+  bio       String?
+  location  String?
+  website   String?
+  title     String?
+  // jobs          Job[]
   // Ensures a unique combination of provider + ID
   @@unique([oauthProvider, oauthId])
 }
 
+// old
+// enum Role {
+//   FREELANCER
+//   CLIENT
+//   ADMIN
+// }
+
+// to separe admin permissions from users
 enum Role {
+  ADMIN
+  USER
+  MODERATOR
+}
+
+enum UserType {
   FREELANCER
   CLIENT
-  ADMIN
+}
+
+enum Status {
+  active
+  suspended
+  pending
 }
 
 model RefreshToken{
