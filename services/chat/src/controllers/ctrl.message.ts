@@ -77,10 +77,12 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 
 		await assert_membership(convers_id, user_id);
 
-		const content = req.body.content?.trim();
+		if (typeof req.body.content !== 'string')
+			throw new err.BadRequestError('content must be a string');
+		const content = req.body.content.trim();
 		if (!content)
 			throw new err.BadRequestError('content is missing');
-		if (content.length > 1500)
+		if (content.length > 3000)
 			throw new err.BadRequestError('content too long');
 
 		const message = await prisma.message.create({
@@ -158,41 +160,41 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-export async function get_one(req: Request, res: Response, next: NextFunction) {
-	try {
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const convers_id = parse_int_id(req.params.id, 'convers_id');
-		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
+// export async function get_one(req: Request, res: Response, next: NextFunction) {
+// 	try {
+// 		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
+// 		const convers_id = parse_int_id(req.params.id, 'convers_id');
+// 		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
 
-		await assert_membership(convers_id, user_id);
+// 		await assert_membership(convers_id, user_id);
 
-		const message = await prisma.message.findFirst({
-			where: {
-				id: msg_id,
-				convers_id
-			},
-			select: {
-				id: true,
-				content: true,
-				sender_id: true,
-				convers_id: true,
-				created_at: true,
-				sender: {
-					select: {
-						username: true,
-						avatar: true
-					}
-				}
-			}
-		});
-		if (!message)
-			throw new err.NotFoundError('message not found');
+// 		const message = await prisma.message.findFirst({
+// 			where: {
+// 				id: msg_id,
+// 				convers_id
+// 			},
+// 			select: {
+// 				id: true,
+// 				content: true,
+// 				sender_id: true,
+// 				convers_id: true,
+// 				created_at: true,
+// 				sender: {
+// 					select: {
+// 						username: true,
+// 						avatar: true
+// 					}
+// 				}
+// 			}
+// 		});
+// 		if (!message)
+// 			throw new err.NotFoundError('message not found');
 
-		res.status(200).json(message);
-	} catch (err) {
-		next(err);
-	}
-}
+// 		res.status(200).json(message);
+// 	} catch (err) {
+// 		next(err);
+// 	}
+// }
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {

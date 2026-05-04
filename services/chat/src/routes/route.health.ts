@@ -7,7 +7,7 @@ const router = Router();
 router.get('/health', async (_req: Request, res: Response) => {
 	try {
 		await prisma.$queryRaw`SELECT 1`;
-		res.status(201).json({
+		res.status(200).json({
 			status: 'ok',
 			service: 'chat',
 			timestamp: new Date()

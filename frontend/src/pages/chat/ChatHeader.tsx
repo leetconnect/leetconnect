@@ -41,8 +41,8 @@ export default function ChatHeader({
 				<div>
 					<h2 className="text-foreground font-semibold text-sm">{name}</h2>
 					{is_direct && (isOnline ? (
-						<p className="text-xs text-primary flex items-center gap-1">
-							<span className="w-2.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(34,197,94,0.85)]" />
+						<p className="flex items-center text-xs text-primary gap-1">
+							<span className="w-2.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse" />
 							online
 						</p>
 					) : (

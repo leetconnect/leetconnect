@@ -29,6 +29,19 @@ function ensure_unique_ids(ids: string[]): string[] {
 	return unique;
 }
 
+const GROUP_NAME_MAX = 64;
+
+function parse_group_name(value: unknown): string {
+	if (typeof value !== 'string')
+		throw new err.BadRequestError('Name is required for Group conversation');
+	const trimmed = value.trim();
+	if (!trimmed)
+		throw new err.BadRequestError('Name is required for Group conversation');
+	if (trimmed.length > GROUP_NAME_MAX)
+		throw new err.BadRequestError(`Group name too long, max ${GROUP_NAME_MAX} characters`);
+	return trimmed;
+}
+
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
 		const curr_user = parse_user_id(req.user?.userId, 'user_id');
@@ -87,11 +100,12 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 		if (type === 'Direct' && member_ids.length !== 2)
 			throw new err.BadRequestError('Direct conversation must have exactly 2 members');
 
-		if (type === 'Group' && member_ids.length <= 2)
-			throw new err.BadRequestError('Group conversation must have at least 2 members');
-
-		if (type === 'Group' && (!req.body.name || !req.body.name.trim()))
-			throw new err.BadRequestError('Name is required for Group conversation');
+		let group_name: string | null = null;
+		if (type === 'Group') {
+			if (member_ids.length <= 2)
+				throw new err.BadRequestError('Group conversation must have at least 2 members');
+			group_name = parse_group_name(req.body.name);
+		}
 
 		const users = await prisma.user.findMany({
 			where: { id: { in: member_ids } },
@@ -100,6 +114,23 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 		if (users.length !== member_ids.length)
 			throw new err.NotFoundError('one or more users do not exist');
+
+		const other_ids	  = member_ids.filter((id: string) => id !== user_id);
+		const friendships = await prisma.friendRequest.findMany({
+			where: {
+				status: 'ACCEPTED',
+				OR: [
+					{sender_id: user_id, receiver_id: {in: other_ids}},
+					{receiver_id: user_id, sender_id: {in: other_ids}}
+				],
+			},
+			select: {sender_id: true, receiver_id: true},
+		});
+		const friend_ids = new Set(
+			friendships.map((f) => f.sender_id === user_id ? f.receiver_id : f.sender_id)
+		);
+		if (other_ids.some((id: string) => !friend_ids.has(id)))
+			throw new err.ForbiddenError('can only start conversations with friends');
 
 		if (type === 'Direct') {
 			const [user_a, user_b] = member_ids;
@@ -113,8 +144,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 					],
 				},
 				include: {
-					members: { select: { user_id: true } },
-				},
+					members: {select: {user_id: true}}
+				}
 			});
 
 			const existing_direct = possible_directs.find((conversation) => {
@@ -132,15 +163,26 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 						members: {
 							select: {
 								user_id: true,
-								user: { select: { username: true, firstname: true, lastname: true, avatar: true } },
-							},
+								user: {
+									select: {
+										username: true,
+										firstname: true,
+										lastname: true,
+										avatar: true
+									}
+								}
+							}
 						},
 						messages: {
-							orderBy: { created_at: 'desc' },
+							orderBy: {created_at: 'desc'},
 							take: 1,
-							select: { content: true, sender_id: true, created_at: true },
-						},
-					},
+							select: {
+								content: true,
+								sender_id: true,
+								created_at: true
+							}
+						}
+					}
 				});
 				res.status(200).json(full);
 				return;
@@ -151,7 +193,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 			const conversation = await trans.convers.create({
 				data: {
 					type: type,
-					name: type === 'Group' ? req.body.name!.trim() : null,
+					name: group_name,
 				},
 			});
 
@@ -269,6 +311,19 @@ export async function add_member(req: Request, res: Response, next: NextFunction
 		if (!target)
 			throw new err.NotFoundError('user not found');
 
+		const friendship = await prisma.friendRequest.findFirst({
+			where: {
+				status: 'ACCEPTED',
+				OR: [
+					{sender_id: requester_id, receiver_id: new_member_id},
+					{sender_id: new_member_id, receiver_id: requester_id},
+				],
+			},
+			select: {id: true},
+		});
+		if (!friendship)
+			throw new err.ForbiddenError('can only add friends to a conversation');
+
 		const existing = await prisma.conversMember.findFirst({
 			where: {convers_id, user_id: new_member_id},
 			select: {id: true},
@@ -284,8 +339,14 @@ export async function add_member(req: Request, res: Response, next: NextFunction
 			where: {convers_id, user_id: new_member_id},
 			select: {
 				user_id: true,
-				user: {select: {username: true, firstname: true, lastname: true, avatar: true, isOnline: true}},
-			},
+				user: {select: {
+					username: true,
+					firstname: true,
+					lastname: true,
+					avatar: true,
+					isOnline: true
+				}}
+			}
 		});
 		res.status(201).json(member);
 	} catch (err) {
@@ -309,19 +370,19 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 		if (convers.type === 'Direct')
 			throw new err.BadRequestError('Direct conversations can not be edited');
-		if (!req.body.name || !req.body.name.trim())
-			throw new err.BadRequestError('name is required');
+
+		const group_name = parse_group_name(req.body.name);
 
 		const updated = await prisma.convers.update({
 			where: {id: convers_id},
-			data: {name: req.body.name.trim()},
+			data: {name: group_name},
 			include: {
 				members: {
 					select: {user_id: true, joined_at: true},
 				}
 			}
 		});
-		res.status(201).json(updated);
+		res.status(200).json(updated);
 	} catch (err) {
 		next(err);
 	}
