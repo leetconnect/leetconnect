@@ -115,22 +115,24 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 		if (users.length !== member_ids.length)
 			throw new err.NotFoundError('one or more users do not exist');
 
-		const other_ids	  = member_ids.filter((id: string) => id !== user_id);
-		const friendships = await prisma.friendRequest.findMany({
-			where: {
-				status: 'ACCEPTED',
-				OR: [
-					{sender_id: user_id, receiver_id: {in: other_ids}},
-					{receiver_id: user_id, sender_id: {in: other_ids}}
-				],
-			},
-			select: {sender_id: true, receiver_id: true},
-		});
-		const friend_ids = new Set(
-			friendships.map((f) => f.sender_id === user_id ? f.receiver_id : f.sender_id)
-		);
-		if (other_ids.some((id: string) => !friend_ids.has(id)))
-			throw new err.ForbiddenError('can only start conversations with friends');
+		if (type === 'Group') {
+			const other_ids	  = member_ids.filter((id: string) => id !== user_id);
+			const friendships = await prisma.friendRequest.findMany({
+				where: {
+					status: 'ACCEPTED',
+					OR: [
+						{sender_id: user_id, receiver_id: {in: other_ids}},
+						{receiver_id: user_id, sender_id: {in: other_ids}}
+					],
+				},
+				select: {sender_id: true, receiver_id: true},
+			});
+			const friend_ids = new Set(
+				friendships.map((f) => f.sender_id === user_id ? f.receiver_id : f.sender_id)
+			);
+			if (other_ids.some((id: string) => !friend_ids.has(id)))
+				throw new err.ForbiddenError('can only add friends to a group conversation');
+		}
 
 		if (type === 'Direct') {
 			const [user_a, user_b] = member_ids;
