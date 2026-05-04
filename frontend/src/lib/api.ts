@@ -117,9 +117,12 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    // dont refresh for these routes 
     const skipRefresh =
     path.includes('/auth/login') ||
-    path.includes('/auth/2f/login') ||
+    path.includes('/auth/2fa/login') ||
+    path.includes('/auth/2fa/setup') ||
+    path.includes('/auth/2fa/disable') ||
     path.includes('/auth/refresh') ||
     path.includes('/auth/change-password');
 
@@ -143,7 +146,6 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     }
 
     if (!res.ok) {
-        console.log("status", res.status)
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
@@ -188,9 +190,9 @@ export const authApi = {
     },
 
     // 2FA
-    setup2FA: () =>api<TwoFASetupResponse>('/auth/2fa/setup', { method: 'POST'}),
+    setup2FA: (password: string) =>api<TwoFASetupResponse>('/auth/2fa/setup', { method: 'POST',body: { password }}),
     verify2FA: (code: string) =>api<User>('/auth/2fa/verify', { method: 'POST',  body: { code }}),
-    disable2FA: (code: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code }}),
+    disable2FA: (code: string, password: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code, password }}),
 
     // Second step of Login (If login returns requires2FA: true)
     login2FA: (tempToken: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { tempToken, code } }),
