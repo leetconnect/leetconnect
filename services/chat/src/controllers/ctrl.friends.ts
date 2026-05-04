@@ -90,7 +90,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 				status: 'PENDING'
 			}
 		});
-		// TODO: create a notif
+
 		const sender_info = await prisma.user.findUnique({
 			where: {id: sender_id}, select: {username: true},
 		});
@@ -98,7 +98,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		await notify(io, {
 			user_id: receiver_id,
 			type: 'FRIEND_REQ',
-			title: 'New Friend Request',
+			title: 'New Connection Request',
 			body: `${sender_info?.username} wants to connect`
 		});
 		res.status(201).json(request);
@@ -136,7 +136,7 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 		await notify(io, {
 			user_id: request.sender_id,
 			type: 'FRIEND_REQ',
-			title: 'Friend Request Accepted',
+			title: 'Connection Request Accepted',
 			body: `${me?.username} accepted your request`
 		});
 
@@ -165,7 +165,17 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 			where: {id: request_id},
 			data: {status: 'REJECTED'}
 		});
-		// TODO: send notif
+
+		const me = await prisma.user.findUnique({
+			where: {id: user_id}, select: {username: true}
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: request.sender_id,
+			type: 'FRIEND_REQ',
+			title: 'Connection Request Rejected',
+			body: `${me?.username} rejected your request`
+		});
 		res.status(200).json(updated);
 	} catch (err) {
 		next(err);
