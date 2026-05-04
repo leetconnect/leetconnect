@@ -1,5 +1,6 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
+import morgan			from 'morgan';
 import http				from 'http';
 import { Server }		from 'socket.io';
 
@@ -39,6 +40,7 @@ const io = new Server(server, {
 	cors: { origin: '*' },
 });
 
+app.use(morgan('dev'));
 app.use(express.json());
 app.set('io', io);
 
