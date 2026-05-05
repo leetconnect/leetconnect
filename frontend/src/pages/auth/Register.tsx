@@ -10,6 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 export default function Register() {
     const navigate = useNavigate();
     const auth = useAuth();
+    const {user} = useAuth()
     const { register: registerUser } = auth || { register: async () => { } };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -110,9 +111,14 @@ export default function Register() {
         try {
             // call backend API for register and update auth context
             await registerUser(formData);
-
+            console.log('wa Userrrrrrr->', user)
             // Navigate to dashboard
-            navigate('/dashboard');
+            if(user?.type === 'FREELANCER'){
+                console.log('ppppppppppppppppppppppp')
+                navigate('/freelancerpage')
+                return;
+            }
+            // navigate('/dashboard');
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {

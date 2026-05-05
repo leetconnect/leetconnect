@@ -164,8 +164,8 @@ const FindClients: React.FC = () => {
             </div>
 
             <div className="flex justify-between mt-4 text-sm text-gray-400">
-              <span>{job.client.username}</span>
-              <span>⭐ {job.client.rating}</span>
+              <span>{job.client?.username}</span>
+              <span>⭐ {job.client?.rating}</span>
             </div>
 
             <div className="flex justify-between mt-3">

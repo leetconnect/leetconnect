@@ -159,7 +159,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
           />
         </div>
 
-        {/* Categories */}
+    
         <div className="mb-6">
           <p className="text-gray-400 text-sm mb-3">CATEGORIES</p>
 
@@ -181,7 +181,6 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
           </div>
         </div>
 
-        {/* Skills */}
         <div className="mb-6">
           <p className="text-gray-400 text-sm mb-3">SKILLS</p>
 
@@ -204,7 +203,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
           </div>
         </div>
 
-        {/* Rate */}
+        
         <div className="mb-6">
           <p className="text-gray-400 text-sm mb-3">HOURLY RATE ($)</p>
 
@@ -235,7 +234,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
           </div>
         </div>
 
-        {/* Experience */}
+       
         <div className="mb-6">
           <p className="text-gray-400 text-sm mb-3">EXPERIENCE LEVEL</p>
 

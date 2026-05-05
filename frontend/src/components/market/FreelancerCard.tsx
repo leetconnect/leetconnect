@@ -28,7 +28,7 @@ const FreelancerCard: React.FC<Props> = ({ freelancer }) => {
   return (
     <div className="bg-[#111] rounded-xl p-6 hover:bg-[#151515] transition-all">
 
-      {/* Header */}
+     
       <div className="flex justify-between mb-4">
 
         <div className="flex gap-3">
@@ -49,7 +49,7 @@ const FreelancerCard: React.FC<Props> = ({ freelancer }) => {
           </div>
         </div>
 
-        {/* Price */}
+        
         <div className="text-right">
           <div className="flex items-center gap-1 text-[#69B34C] font-bold">
             <DollarSign size={18} />
@@ -60,7 +60,7 @@ const FreelancerCard: React.FC<Props> = ({ freelancer }) => {
         </div>
       </div>
 
-      {/* Rating */}
+      
       <div className="flex items-center gap-1 mb-3">
         {new Array(5).fill(0).map((_, index) => (
           <Star
@@ -96,7 +96,7 @@ const FreelancerCard: React.FC<Props> = ({ freelancer }) => {
         )}
       </div>
 
-      {/* Button */}
+   
       <button className="w-full bg-[#1A1A1A] py-2 rounded-lg text-sm hover:bg-[#222] transition">
         View Profile
       </button>

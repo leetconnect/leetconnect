@@ -45,7 +45,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-black text-white p-6">
 
-      {/* TOP BAR */}
       <div className="flex justify-between items-center mb-8">
         <input
           type="text"
@@ -58,8 +57,6 @@ const Dashboard: React.FC = () => {
           Post a Job
         </button>
       </div>
-
-      {/* TITLE */}
       <div>
         <h1 className="text-2xl font-semibold">Welcome back</h1>
         <p className="text-gray-400 text-sm mt-1">
@@ -67,19 +64,18 @@ const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* LOADING */}
+    
       {loading && (
         <p className="text-gray-400 mt-6">Loading jobs...</p>
       )}
 
-      {/* TABLE */}
       <div className="bg-[#111] border border-gray-800 rounded-xl mt-8">
 
         <div className="flex justify-between items-center p-4 border-b border-gray-800">
           <h2 className="font-medium">My Jobs</h2>
         </div>
 
-        {/* HEADER */}
+
         <div className="grid grid-cols-4 p-4 text-gray-400 text-sm border-b border-gray-800">
           <span>Job Title</span>
           <span>Posted</span>
@@ -87,7 +83,6 @@ const Dashboard: React.FC = () => {
           <span>Status</span>
         </div>
 
-        {/* DATA */}
         {jobs.length === 0 && !loading ? (
           <p className="p-4 text-gray-400">No jobs found</p>
         ) : (
@@ -97,19 +92,16 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate(`/jobs/${job.id}`)}
               className="grid grid-cols-4 p-4 items-center border-b border-gray-800 cursor-pointer hover:bg-[#1a1a1a]"
             >
-
-              {/* TITLE */}
               <div>
                 <p className="font-medium">{job.title}</p>
                 <p className="text-gray-400 text-sm">{job.category}</p>
               </div>
 
-              {/* DATE */}
+             
               <span className="text-sm text-gray-400">
                 {new Date(job.createdAt).toLocaleString()}
               </span>
 
-              {/* PROPOSALS */}
               {job.proposals && job.proposals.length > 0 ? (
                 <div className="flex -space-x-2">
                   {job.proposals.map((_, i) => (
@@ -125,7 +117,7 @@ const Dashboard: React.FC = () => {
                 </span>
               )}
 
-              {/* STATUS */}
+            
               <span
                 className={`px-3 py-1 rounded-full text-xs w-fit ${
                   job.status === "OPEN"
