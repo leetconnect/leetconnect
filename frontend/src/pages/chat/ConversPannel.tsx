@@ -40,7 +40,7 @@ export default function ConversPanel({
 			<div className="p-4">
 				<button
 					onClick={() => setShowModal(true)}
-					className="w-full h-12 py-3 px-4 rounded-md bg-primary text-primary-foreground
+					className="w-full h-12 py-3 px-4 rounded-xl bg-primary text-primary-foreground
 							   text-sm font-medium hover:bg-primary/90 transition-colors"
 				>
 					+ Create Group

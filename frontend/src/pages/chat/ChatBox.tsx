@@ -8,6 +8,7 @@ interface ChatBoxProp {
 	convers_name: 		string;
 	convers_avatar: 	string;
 	convers_username?: 	string | undefined;
+	is_direct:			boolean;
 	messages: 			Message[];
 	curr_user: 			string;
 	has_more:			boolean;
@@ -20,25 +21,31 @@ interface ChatBoxProp {
 }
 
 export default function ChatBox({
-	convers_name, convers_avatar, convers_username, messages, curr_user,
+	convers_name, convers_avatar, convers_username, is_direct, messages, curr_user,
 	onSendMessage, onLoadMore, has_more, loading_more, onDeleteMessage, onBack
 }: ChatBoxProp) {
 	const bottom_ref = useRef<HTMLDivElement>(null);
 	const scroll_ref = useRef<HTMLDivElement>(null);
 	const is_initial_load = useRef(true);
+	const last_id_ref = useRef<number | null>(null);
 
 	useEffect(() => {
+		const last = messages[messages.length - 1];
 		if (is_initial_load.current) {
 			bottom_ref.current?.scrollIntoView();
 			is_initial_load.current = false;
+			last_id_ref.current = last?.id ?? null;
 			return;
 		}
-		const last = messages[messages.length - 1];
+		const is_new_tail = last && last.id !== last_id_ref.current;
+		last_id_ref.current = last?.id ?? null;
+		if (!is_new_tail) return;
+
 		const ref = scroll_ref.current;
 		const near_bottom = ref
 			? ref.scrollHeight - ref.scrollTop - ref.clientHeight < 150
 			: false;
-		if (last?.sender_id === curr_user || near_bottom) {
+		if (last.sender_id === curr_user || near_bottom) {
 			bottom_ref.current?.scrollIntoView({ behavior: 'smooth' });
 		}
 	}, [messages, curr_user]);
@@ -68,7 +75,7 @@ export default function ChatBox({
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0">
-			<ChatHeader name={convers_name} avatar={convers_avatar} is_online={true} username={convers_username} onBack={onBack}/>
+			<ChatHeader name={convers_name} avatar={convers_avatar} is_online={is_direct} username={convers_username} onBack={onBack}/>
 			<div ref={scroll_ref} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-4">
 				{loading_more && (
 					<div className="flex justify-center py-3">

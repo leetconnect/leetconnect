@@ -16,6 +16,8 @@ export const setAccessToken = (token: string | null) => {
     _accessToken = token;
 };
 
+export const getAccessToken = () => _accessToken;
+
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
     method?: HttpMethod;
@@ -109,8 +111,13 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    const skipRefresh =
+    path.includes('/auth/login') ||
+    path.includes('/auth/refresh') ||
+    path.includes('/auth/change-password'); // ← add this
+
     // If token expired (401) refresh to get a new one
-    if (res.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+    if (res.status === 401 && !skipRefresh) {
         try {
             const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
                 method: 'POST',
@@ -173,6 +180,18 @@ interface CreateConversPayload {
     member_ids: string[];
 }
 
+export interface UserProfile {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    avatar: string;
+    isOnline: boolean;
+    type: 'CLIENT' | 'FREELANCER';
+    bio?: string | null;
+    createdAt: string;
+}
+
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
 	listConversations: () =>
@@ -223,6 +242,9 @@ export const chatApi = {
         }),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
+    
+	// ---------------------- Users ----------------------
+    getUser: (username: string) => api<UserProfile>(`/chat/users/${username}`),
 };
 
 export interface FriendRequest {
@@ -275,6 +297,24 @@ export const friendApi = {
             body: {friend_id},
         })
 }
+
+export interface ChatNotif {
+    id: number;
+    user_id: string;
+    type: 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
+    title: string;
+    body: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export const notifApi = {
+    list: (): Promise<ChatNotif[]> => api('/notifs'),
+    markRead: (id: number): Promise<ChatNotif> =>
+        api(`/notifs/${id}/read`, { method: 'PATCH' }),
+    markAllRead: (): Promise<{ message: string }> =>
+        api('/notifs/read-all', { method: 'PATCH' }),
+};
 
 export const analyticsApi = {
     getDashboard: () => api('/analytics/dashboard'),

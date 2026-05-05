@@ -21,11 +21,11 @@ certs:
 
 clean:
 	docker compose down -v
-	sudo rm -rf certs
+	rm -rf certs
 
 fclean:
 	docker compose down -v --rmi all
-	sudo rm -rf certs
+	rm -rf certs
 
 logs:
 	docker compose logs -f
