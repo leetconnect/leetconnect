@@ -160,6 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initAuth = async () => {
       try {
         const userData = await api<User>('/auth/me');
+        console.log(userData)
         setUser(userData);
       } catch {
         setUser(null);

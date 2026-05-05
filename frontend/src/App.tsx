@@ -19,6 +19,7 @@ import Freelencers from './pages/market/Freelencers';
 import JobDetails from './pages/market/JobDetails';
 import PostJob from './pages/market/PostJob';
 import FreelancerDashboardPage from './pages/market/FreelancerDashboardPage';
+import FreelancerSetupPage from "./pages/market/FreelancerSetupPage";
 import FindClients from './pages/market/FindClients';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route element={<GuestRoute />}>
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
+          <Route path='/freelancerpage' element={<FreelancerSetupPage/>}/>
         </Route>
         
         {/*Public routes*/}
