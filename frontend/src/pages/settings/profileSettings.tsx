@@ -27,6 +27,10 @@ export default function ProfileSettings() {
     const [showDisable2FA, setShowDisable2FA] = useState(false);
     const [disableCode, setDisableCode] = useState('');
 
+    // 2FA password check
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
     // Profile form state
     const [profileForm, setProfileForm] = useState({
         firstname: '',
@@ -424,24 +428,27 @@ export default function ProfileSettings() {
     const Enable2FA = async () => {
         setTwoFaError(null);
         setSuccessMessage(null);
-        console.log(user?.twoFAEnabled)
         if (user?.twoFAEnabled == true){
             setTwoFaError("2FA is already enabled on your account.");
             return;
         }
-        
-        // reset 
-        
+
+        // check password before enabling 2FA
+        if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
+            setTwoFaError("Please enter your password to continue.");
+            return;
+        }
         setIs2FALoading(true);
         try {
-            const res = await authApi.setup2FA();
+            const res = await authApi.setup2FA(confirmPassword);
             setQrCode(res.qrCode);
+            setConfirmPassword('');
+            setShowPasswordConfirm(false);
         } catch (err: any) {
             setTwoFaError(err.message);
         } finally {
             setIs2FALoading(false);
         }
-
     };
 
     // verify 2FA
@@ -468,15 +475,25 @@ export default function ProfileSettings() {
     const disable2FA = async () => {
         setTwoFaError(null);
         setSuccessMessage(null);
+
+        // check password before enabling 2FA
+        if (!confirmPassword.trim()) {
+            setTwoFaError("Please enter your password to continue.");
+            return;
+        }
+
         if (disableCode.trim().length !== 6) {
             setTwoFaError("Enter the 6-digit code to confirm.");
             return;
         }
+
         try {
-                await authApi.disable2FA(disableCode);  // send code to backend to check if its correct
+                await authApi.disable2FA(disableCode, confirmPassword);  // send code to backend to check if its correct
                 setSuccessMessage("2FA has been disabled.");
                 setShowDisable2FA(false);
                 setDisableCode('');
+                setConfirmPassword('');
+                setShowPasswordConfirm(false);
                 const updatedUser = await authApi.me();
                 setUser(updatedUser);
             } catch (err: any) {
@@ -973,7 +990,12 @@ export default function ProfileSettings() {
                                 <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-foreground-muted text-sm flex items-center justify-between">
                                 <span> 2FA is currently activated on your account</span>
                                 <button
-                                    onClick={() => setShowDisable2FA(prev => !prev)}
+                                    onClick={() => {
+                                        setShowDisable2FA(prev => !prev);
+                                        setConfirmPassword('');
+                                        setDisableCode('');
+                                        setTwoFaError(null);
+                                    }}
                                     className="text-xs text-red-400 hover:text-red-300 transition-colors underline hover:cursor-pointer"
                                 >
                                     Disable
@@ -984,8 +1006,16 @@ export default function ProfileSettings() {
                                 {showDisable2FA && (
                                 <div className="bg-background p-4 border border-red-500/20 rounded-lg space-y-3 overflow-hidden">
                                     <p className="text-sm text-foreground-muted">
-                                    Enter your 6-digit authenticator code to confirm:
+                                    Enter your password and 6-digit authenticator code to confirm:
                                     </p>
+                                    {/* password check before disabling 2FA */}
+                                    <input
+                                        type="password"
+                                        className="w-full bg-background border border-border rounded px-3 py-2 outline-none focus:border-red-400 transition-colors"
+                                        placeholder="Your password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
                                     <div className="flex gap-2 w-full">
                                         <input
                                             className="min-w-0 flex-1 bg-background border border-border rounded px-3 py-1 text-center text-lg tracking-widest outline-none focus:border-red-400"
@@ -1010,14 +1040,63 @@ export default function ProfileSettings() {
                             ) : (
                             <div className="space-y-4">
                             {!qrCode ? (
-                                <Button
-                                    onClick={Enable2FA}
-                                    disabled={is2FALoading}
-                                    className="w-full bg-primary hover:bg-primary/90 text-white transition-colors"
-                                >
-                                Set up 2FA
-                                </Button>
-                               
+                               <div className="space-y-3">
+                                {/* show button for enable 2FA */}
+                                {!showPasswordConfirm && (
+                                    <Button
+                                        onClick={() => setShowPasswordConfirm(true)}
+                                        disabled={is2FALoading}
+                                        className="w-full bg-primary hover:bg-primary/90 text-white transition-colors"
+                                    >
+                                        Set up 2FA
+                                    </Button>
+                                )}
+
+                                {/* Ask for password pinput + confirm button (only after clicking Set up 2FA) */}
+                                {showPasswordConfirm && (
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-foreground-muted">
+                                            Confirm your password to continue:
+                                        </p>
+                                        <input
+                                            type="password"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-background border border-border focus:border-primary outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                                            placeholder="Your password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            autoFocus
+                                        />
+
+
+                                        <div className="flex gap-2">
+                                            {/* Cancel and  go back to just the button */}
+                                            <Button
+                                                onClick={() => {
+                                                    setShowPasswordConfirm(false);
+                                                    setConfirmPassword('');
+                                                    setTwoFaError(null);
+                                                }}
+                                                className="flex-1 bg-background border border-border hover:bg-surface text-foreground-muted"
+                                                >
+                                                Cancel
+                                            </Button>
+
+                                            {/* Confirm and call Enable2FA with password */}
+                                            <Button
+                                                onClick={Enable2FA}
+                                                disabled={is2FALoading}
+                                                className="flex-1 bg-primary hover:bg-primary/90 text-white transition-colors"
+                                                >
+                                                {is2FALoading ? 'Verifying...' : 'Confirm'}
+                                            </Button>
+                                        </div>
+                                        {TwoFaError && (
+                                            <p className="text-xs text-red-400">{TwoFaError}</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
                             ) : (
                                 <div className="bg-background p-4 border border-border rounded-lg space-y-4">
                                     <p className="text-sm text-foreground-muted">
@@ -1051,10 +1130,6 @@ export default function ProfileSettings() {
                             )}
                             </div>
                         )}
-                        {/* display error message
-                        {TwoFaError && (
-                            <p className="text-xs text-red-400">{TwoFaError}</p>
-                        )} */}
                         </div>
                     </div>
                 </CardContent>

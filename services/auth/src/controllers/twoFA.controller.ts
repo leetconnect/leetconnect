@@ -3,15 +3,28 @@ import { authenticator } from '@otplib/v12-adapter';
 import QRCode from 'qrcode';
 import prisma from '../lib/prisma';
 import { generateAccessToken, generateRefreshToken, verifyTempToken } from '../lib/token';
+import bcrypt from 'bcryptjs';
 
 // GENERATE SECRET and QR CODE
 export const setup2FA = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log("here")
         const userId = req.user!.userId;
+        const { password } = req.body; 
+
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
         if (user?.twoFAEnabled) {
             return res.status(400).json({ error: "2FA is already enabled" });
+        }
+        
+        // password check before 2FA activation
+        if (!password) {
+            return res.status(400).json({ error: "Password is required" });
+        }
+        const isValid = await bcrypt.compare(password, user!.password!);
+        if (!isValid) {
+            return res.status(401).json({ error: "Incorrect password" });
         }
 
         // Generate a 32-character secret
@@ -77,15 +90,21 @@ export const verifyAndEnable2FA = async (req: Request, res: Response, next: Next
 export const disable2FA = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
-    const { code } = req.body;
+    const { code , password} = req.body;
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { twoFASecret: true, twoFAEnabled: true },
-    });
+    const user = await prisma.user.findUnique({ where: { id: userId }} );
 
     if (!user?.twoFAEnabled || !user.twoFASecret) {
       return res.status(400).json({ error: "2FA is not enabled" });
+    }
+
+    // check password before disactivating the 2FA
+    if (!password) {
+            return res.status(400).json({ error: "Password is required" });
+    }
+    const isValidPassword = await bcrypt.compare(password, user!.password!);
+    if (!isValidPassword) {
+        return res.status(401).json({ error: "Incorrect password" });
     }
 
     const isValid = authenticator.verify({
