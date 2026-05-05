@@ -2,11 +2,12 @@ import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { JobStatus } from "../../prisma/generated/client";
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
+import { ADMIN_EVENTS, publishEvent } from "@leetconnect/shared";
 
 export const getAllJobs = async (req: Request, res: Response) => {
 	const user = req.user;
 
-	if(user?.role !== 'ADMIN')
+	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
 		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 	try {
 		const { search, status, category } = req.query;
@@ -24,19 +25,10 @@ export const getAllJobs = async (req: Request, res: Response) => {
 			},
 
 			select: {
-				id: true,
-				title: true,
-				description: true,
-				budget: true,
-				budgetType: true,
-				category: true,
-				createdBy: true,
-				status: true,
-				createdAt: true,
-				proposals: true,
-				skills: true,
-				deadline: true,
-				postedByName: true
+				id: true, title: true, description: true, budget: true,
+				budgetType: true, category: true, createdBy: true, status: true,
+				createdAt: true, proposals: true, skills: true,
+				deadline: true, postedByName: true
 			},
 			orderBy: { createdAt: 'desc'} 
 		})
@@ -50,7 +42,7 @@ export const getAllJobs = async (req: Request, res: Response) => {
 export const getJob = async (req: Request, res: Response) => {
 	const user = req.user;
 
-	if(user?.role !== 'ADMIN')
+	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
 		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 
 	try {
@@ -61,19 +53,10 @@ export const getJob = async (req: Request, res: Response) => {
 		const job = await prisma.job.findUnique({
 			where: { id },
 			select: {
-				id: true,
-				title: true,
-				description: true,
-				budget: true,
-				budgetType: true,
-				category: true,
-				createdBy: true,
-				status: true,
-				createdAt: true,
-				proposals: true,
-				skills: true,
-				deadline: true,
-				postedByName: true
+				id: true, title: true, description: true, budget: true,
+				budgetType: true, category: true, createdBy: true, status: true,
+				createdAt: true, proposals: true, skills: true,
+				deadline: true, postedByName: true
 			},
 		});
 
@@ -90,7 +73,7 @@ export const getJob = async (req: Request, res: Response) => {
 export const editJobStatus = async (req: Request, res: Response) => {
 	const user = req.user;
 
-	if(user?.role !== 'ADMIN')
+	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
 		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 
 	try {
@@ -100,26 +83,19 @@ export const editJobStatus = async (req: Request, res: Response) => {
 
 		const { status } = req.body;
 
-		const updateJob = await prisma.job.update({
+		const updatedJob = await prisma.job.update({
 			where: { id },
 			data: { status },
 			select: {
-				id: true,
-				title: true,
-				description: true,
-				budget: true,
-				budgetType: true,
-				category: true,
-				createdBy: true,
-				status: true,
-				createdAt: true,
-				proposals: true,
-				skills: true,
-				deadline: true,
-				postedByName: true
+				id: true, title: true, description: true, budget: true,
+				budgetType: true, category: true, createdBy: true, status: true,
+				createdAt: true, proposals: true, skills: true,
+				deadline: true, postedByName: true
 			},
 		});
-		return res.status(StatusCodes.OK).json(updateJob);
+
+		await publishEvent(ADMIN_EVENTS.CONTENT_UPDATED, updatedJob);
+		return res.status(StatusCodes.OK).json(updatedJob);
 	} catch (error: any) {
 		if(error?.code === 'P2025') {
 			return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not found'});
@@ -132,7 +108,7 @@ export const editJobStatus = async (req: Request, res: Response) => {
 export const deleteJob = async (req: Request, res: Response) => {
 	const user = req.user;
 
-	if(user?.role !== 'ADMIN')
+	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
 		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
 
 	try {
@@ -143,6 +119,7 @@ export const deleteJob = async (req: Request, res: Response) => {
 			where: { id }
 		});
 
+		await publishEvent(ADMIN_EVENTS.CONTENT_DELETED, { id });
 		return res.status(StatusCodes.OK).json({ message: 'Job deleted successfully'});
 	} catch (error: any) {
 		if(error?.code === 'P2025')

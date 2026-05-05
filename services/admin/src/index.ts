@@ -4,10 +4,9 @@ import dotenv from "dotenv"
 import usersRoutes from "./routes/users.route"
 import jobsRoutes from "./routes/jobs.route"
 import rolesRoutes from "./routes/roles.route"
-import { connectDb, disconnectDb } from './config/prisma'
+import { connectDb, disconnectDb, prisma } from './config/prisma'
 import { Server } from "http"
 import { authMiddleware, subscribeToEvents, AUTH_EVENTS, initEventBus } from '@leetconnect/shared';
-import { prisma } from "./config/prisma"
 
 dotenv.config();
 connectDb();
@@ -31,24 +30,38 @@ const server: Server = app.listen(PORT, () => {
 async function startEventListener() {
 	subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async(channel, message: any) => {
 		try {
-			const { id, username, avatar, role, email } = message.data;
+			const { id, username, avatar, role, email, firstname, lastname, status, createdAt } = message.data;
 
 			await prisma.user.upsert({
 				where: { id: id },
 				update: {
-					username: username,
-					avatar: avatar,
-					role: role
+					username: username, avatar: avatar, firstname: firstname,
+					lastname: lastname, status: status, role: role
 				},
 				create: {
-          id: id, 
-          username: username, 
-          avatar: avatar,
-          role: role,
-					email: email
+          id: id, username: username, avatar: avatar, role: role,
+					email: email, firstname: firstname, lastname: lastname,
+					status: status, createdAt: createdAt
         }
 			});
 
+			console.log(`Synced user ${username} to Admin DB`);
+		} catch (error) {
+			console.error(`Sync failed for user:`, error);
+		}
+	})
+	subscribeToEvents(AUTH_EVENTS.USER_UPDATED, async(channel, message: any) => {
+		try {
+			const { id, username, avatar, email, firstname, lastname } = message.data;
+	
+			await prisma.user.update({
+				where: { id: id },
+				data: { username, avatar, firstname, lastname, email},
+				select: {
+					id: true, email: true, firstname: true, lastname: true, avatar: true, username: true
+				}
+			});
+			
 			console.log(`Synced user ${username} to Admin DB`);
 		} catch (error) {
 			console.error(`Sync failed for user:`, error);
