@@ -31,6 +31,11 @@ export interface User {
     username: string; // Used 'username' instead of 'name'
     firstname: string;
     lastname: string;
+    category: string[],
+    skills: string[],
+    avatar: string,
+    bio: string,
+    proposals: Proposal,
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
