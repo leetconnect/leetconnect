@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, setAccessToken, type User } from '../lib/api';
+import { api, setAccessToken, type LoginRequest, type RegisterRequest, type User } from '../lib/api';
 import { authApi } from '../lib/api';
 import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
 import { Role, Permission } from '@/types';
@@ -7,8 +7,9 @@ import { Role, Permission } from '@/types';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (data: LoginRequest) => Promise<{ requires2FA: boolean; tempToken?: string; user?: User}>;
+  login2FA: (tempToken: string, code: string) => Promise<{ user: User }>; // added user in return !
+  register: (data: RegisterRequest) => Promise<{ user: User }>; // added user in return !
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
 	hasRole: (role: Role | Role[]) => boolean;
@@ -42,22 +43,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (data: any) => {
-    const res = await api<{ accessToken: string, user: User }>('/auth/login', {
-      method: 'POST',
-      body: data
-    });
-    setAccessToken(res.accessToken);
-    setUser(res.user);
+  const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
+     const res = await api<{ 
+      token?: string;
+      user?: User;
+      requires2FA?: boolean;
+      tempToken?: string;
+    }>('/auth/login', { method: 'POST', body: data });
+
+    // 2Fa required = dont set accesstoken or user yet
+    if (res.requires2FA) {
+      return { requires2FA: true, tempToken: res.tempToken as string};
+    }
+    
+    // normal login
+    setAccessToken(res.token!);
+    setUser(res.user!);
+   
+    return { requires2FA: false, user: res.user!};
   };
 
-  const register = async (data: any) => {
+  const login2FA = async (tempToken: string, code: string): Promise<{user: User;}> => {
+    const res = await authApi.login2FA(tempToken, code);
+    setAccessToken(res.token);
+    setUser(res.user!);
+    return {user: res.user! }
+  };
+
+  const register = async (data: RegisterRequest) : Promise<{user: User;}>=> {
     const res = await api<{ accessToken: string, user: User }>('/auth/register', {
       method: 'POST',
       body: data
     });
     setAccessToken(res.accessToken);
     setUser(res.user);
+    return {user: res.user};
   };
 
   const logout = async () => {
