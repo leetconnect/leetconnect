@@ -21,12 +21,26 @@ export const AUTH_EVENTS = {
   USER_UPDATED: 'user.updated',
 };
 
+export const ADMIN_EVENTS = {
+	USER_UPDATED: 'user.updated',
+	USER_DELETED: 'user.deleted',
+	CONTENT_UPDATED: 'content.updated',
+	CONTENT_DELETED: 'content.deleted'
+}
+
 // The data sent to other services
 export interface UserRegisteredPayload {
   id: string;
   email: string;
   username: string;
+  firstname: string;
+  lastname: string;
   role: string;
+  type: string;
+}
+
+export interface UserPresencePayload {
+    id: string;
 }
 
   export const JOB_STATUS = {
@@ -60,6 +74,8 @@ export interface UserRegisteredPayload {
     // USER_REGISTERED: 'user.registered',
     USER_ONLINE: 'user.online',
     USER_OFFLINE: 'user.offline',
+    PRESENCE_RESET: 'presence.reset',
+    NOTIF_CREATE: 'notif.create', 
     JOB_CREATED: 'job.created',
     PROPOSAL_RECEIVED: 'proposal.received',
     CONTRACT_COMPLETED: 'contract.completed',

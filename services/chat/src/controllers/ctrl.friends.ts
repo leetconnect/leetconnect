@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
+import { notify } from '../lib/notify';
 
 function parse_user_id(value: unknown, label: string): string {
 	const val = typeof value === 'string' ? value.trim() : '';
@@ -19,6 +20,32 @@ function parse_int_id(value: unknown, label: string): number {
 function check_pending(status: string): void {
 	if (status !== 'PENDING')
 		throw new err.BadRequestError('friend request is already handled');
+}
+
+async function ensure_direct_conversation(user_a: string, user_b: string) {
+	const existing = await prisma.convers.findFirst({
+		where: {
+			type: 'Direct',
+			AND: [
+				{members: {some: {user_id: user_a}}},
+				{members: {some: {user_id: user_b}}},
+			],
+		},
+		include: {members: {select: {user_id: true}}},
+	});
+	if (existing && existing.members.length === 2)
+		return existing;
+
+	return prisma.$transaction(async (trans) => {
+		const convers = await trans.convers.create({data: {type: 'Direct'}});
+		await trans.conversMember.createMany({
+			data: [
+				{convers_id: convers.id, user_id: user_a},
+				{convers_id: convers.id, user_id: user_b},
+			],
+		});
+		return convers;
+	});
 }
 
 export async function send(req: Request, res: Response, next: NextFunction) {
@@ -63,7 +90,17 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 				status: 'PENDING'
 			}
 		});
-		// TODO: create a notif
+
+		const sender_info = await prisma.user.findUnique({
+			where: {id: sender_id}, select: {username: true},
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: receiver_id,
+			type: 'FRIEND_REQ',
+			title: 'New Connection Request',
+			body: `${sender_info?.username} wants to connect`
+		});
 		res.status(201).json(request);
 	} catch (err) {
 		next(err);
@@ -89,7 +126,20 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 			where: {id: request_id},
 			data: {status: 'ACCEPTED'}
 		});
-		// TODO: send notif
+
+		await ensure_direct_conversation(request.sender_id, request.receiver_id);
+
+		const me = await prisma.user.findUnique({
+			where: {id: user_id}, select: {username: true}
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: request.sender_id,
+			type: 'FRIEND_REQ',
+			title: 'Connection Request Accepted',
+			body: `${me?.username} accepted your request`
+		});
+
 		res.status(200).json(updated);
 	} catch (err) {
 		next(err);
@@ -115,7 +165,17 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 			where: {id: request_id},
 			data: {status: 'REJECTED'}
 		});
-		// TODO: send notif
+
+		const me = await prisma.user.findUnique({
+			where: {id: user_id}, select: {username: true}
+		});
+		const io = req.app.get('io');
+		await notify(io, {
+			user_id: request.sender_id,
+			type: 'FRIEND_REQ',
+			title: 'Connection Request Rejected',
+			body: `${me?.username} rejected your request`
+		});
 		res.status(200).json(updated);
 	} catch (err) {
 		next(err);
@@ -156,7 +216,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 				status: 'PENDING'
 			},
 			include: {
-				receicer: {
+				receiver: {
 					select: {
 						id: true,
 						username: true,
@@ -167,13 +227,13 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 			orderBy: {created_at: 'desc'}
 		});
 
-		const mapped = reguest.map(({receicer, ...rest}: 
-			{ receicer: {
+		const mapped = reguest.map(({receiver, ...rest}: 
+			{ receiver: {
 				id: string;
 				username: string;
 				avatar: string
 			}; [key: string]: unknown
-		}) => ({...rest, receiver: receicer}));
+		}) => ({...rest, receiver: receiver}));
 
 		res.status(200).json(mapped);
 
@@ -212,36 +272,13 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 		const friends = users.map((u:
 			{ id: string; username: string; avatar: string; isOnline: boolean }) => ({
-				id:        u.id,
-				username:  u.username,
-				avatar:    u.avatar,
-				is_online: u.isOnline,
+				id:			u.id,
+				username:	u.username,
+				avatar:		u.avatar,
+				is_online:	u.isOnline,
 		}));
 
 		res.status(200).json(friends);
-	} catch (err) {
-		next(err);
-	}
-}
-
-export async function cancel(req: Request, res: Response, next: NextFunction) {
-	try {
-		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const request	 = await prisma.friendRequest.findUnique({
-			where: {id: request_id}
-		});
-
-		if (!request)
-			throw new err.NotFoundError('friend request not found');
-		check_pending(request.status);
-		if (request.sender_id !== user_id)
-			throw new err.UnauthorizedError('only sender can cancel');
-
-		await prisma.friendRequest.delete({
-			where: {id: request_id}
-		});
-		res.status(200).json({message: 'friend request canceled'});
 	} catch (err) {
 		next(err);
 	}
