@@ -6,16 +6,15 @@ import morgan from 'morgan';
 // shared resources
 import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
 
-// ensure zero trust 
-// import fs from 'fs';
-// import https from 'https';
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth.routes';
 import healthRoutes from './routes/health';
 import { rateLimit } from 'express-rate-limit';
+import path from 'path';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT =  3001;
 
 
@@ -60,26 +59,28 @@ app.get('/metrics', async (_req, res) => {
   res.send(await getMetrics());
 });
 
-// add rate limiting 
-// const authLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000,    // 15 minutes
-//     max: 10,                     // 10 requests per IP per 15 minutes
-//     message: { error: "Too many accounts created from this IP, try again later" },
-//     standardHeaders: true,
-//     legacyHeaders: false,
-// });
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// const loginLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000,
-//     max: 5,
-//     message: { error: 'Too many login attempts, try again later' },
-//     standardHeaders: true,
-//     legacyHeaders: false,
-// });
+// add rate limiting  fpr login and register routes
+const registerLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,    // 15 minutes
+    max: 10,                     // 10 requests per IP per 15 minutes
+    message: { error: "Too many accounts created from this IP, try again later" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: 'Too many login attempts, try again later' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 
-// app.use('/api/auth/register', authLimiter);
-// app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
+app.use('/api/auth/login', loginLimiter);
 
 // routes
 app.use('/api/auth', healthRoutes);
