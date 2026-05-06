@@ -4,6 +4,7 @@
 
 import type { Conversation } from '../pages/chat/ConverLayer';
 import type { Message } from '../pages/chat/MessageLayer';
+import type { Job } from '@/types';
 
 const API_BASE = '/api';
 
@@ -15,6 +16,8 @@ let _accessToken: string | null = null;
 export const setAccessToken = (token: string | null) => {
     _accessToken = token;
 };
+
+export const getAccessToken = () => _accessToken;
 
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
@@ -33,6 +36,8 @@ export interface User {
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
+		status: 'active' | 'suspended' | 'pending';
+		createdAt: string;
 
     // profile settings
     bio: string;
@@ -47,12 +52,39 @@ export interface TwoFASetupResponse {
     qrCode: string;
 }
 
-export interface Job {
+export interface OverviewData {
+  totalUsers: number;
+  totalJobs: number;
+  activeJobs: number;
+  flaggedJobs: number;
+  suspendedUsers: number;
+  pendingUsers: number;
+  newUsersThisWeek: number;
+  newJobsThisWeek: number;
+}
+
+export interface UsersAnalytics {
+  range: string;
+  registrationsOverTime: { date: string; count: number }[];
+  byRole: { role: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+}
+
+export interface JobsAnalytics {
+  range: string;
+  jobsOverTime: { date: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+  byCategory: { category: string; count: number }[];
+  byBudgetType: { type: string; count: number }[];
+  avgProposals: number;
+}
+
+/* export interface Job {
     id: string;
     title: string;
     description: string;
     createdAt: string;
-}
+} */
 
 // export interface Conversation {
 //     id: string;
@@ -219,6 +251,20 @@ interface CreateConversPayload {
     member_ids: string[];
 }
 
+export interface UserProfile {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    avatar: string;
+    isOnline: boolean;
+    type: 'CLIENT' | 'FREELANCER';
+    bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    createdAt: string;
+}
+
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
 	listConversations: () =>
@@ -267,8 +313,23 @@ export const chatApi = {
                 member_ids: data.member_ids,
             },
         }),
+
+	addMember: (convers_id: number, user_id: string) =>
+		api<{
+            user_id: string;
+            user: {
+                username: string;
+                avatar: string;
+                isOnline: boolean
+            }}>(
+			`/chat/convers/${convers_id}/members`,
+			{ method: 'POST', body: { user_id } },
+		),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
+    
+	// ---------------------- Users ----------------------
+    getUser: (username: string) => api<UserProfile>(`/chat/users/${username}`),
 };
 
 export interface FriendRequest {
@@ -307,11 +368,6 @@ export const friendApi = {
             method: 'PATCH'
         }),
 
-    cancelRequest: (request_id: number) =>
-        api<void>(`/friend/requests/${request_id}`, {
-            method: 'DELETE'
-        }),
-
     listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
     listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
     listFriends: () => api<Friend[]>('/friend/requests/friends'),
@@ -322,12 +378,69 @@ export const friendApi = {
         })
 }
 
+export interface ChatNotif {
+    id: number;
+    user_id: string;
+    type: 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
+    title: string;
+    body: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export const notifApi = {
+    list: (): Promise<ChatNotif[]> => api('/notifs'),
+    markRead: (id: number): Promise<ChatNotif> =>
+        api(`/notifs/${id}/read`, { method: 'PATCH' }),
+    markAllRead: (): Promise<{ message: string }> =>
+        api('/notifs/read-all', { method: 'PATCH' }),
+};
+
 export const analyticsApi = {
-    getDashboard: () => api('/analytics/dashboard'),
+    getAnalyticsOverview: () =>
+			api<OverviewData>('/admin/analytics/overview'),
+		getUsersAnalytics: (params: string) =>
+			api<UsersAnalytics>(`/admin/analytics/users?${params}`),
+		getJobsAnalytics: (params: string) =>
+			api<JobsAnalytics>(`/admin/analytics/jobs?${params}`),
     health: () => api<HealthResponse>('/analytics/health'),
 };
 
+export interface RoleConfig {
+  id:          string;
+  label:       string;
+  description: string;
+  userCount:   number;
+  permissions: string[];
+}
+
 export const adminApi = {
-    getUsers: () => api('/admin/users'),
-    health: () => api<HealthResponse>('/admin/health'),
+  // users
+  getUsers:         (params?: { search?: string; role?: string; status?: string }) => {
+		const query = new URLSearchParams(params as any).toString();
+		return api<User[]>(`/admin/users?${query}`);
+	},
+  getUserById:      (id: string)              => api<User>(`/admin/users/${id}`),
+  updateUserStatus: (id: string, status: string) =>
+    api<User>(`/admin/users/${id}/status`, { method: 'PATCH', body: { status } }),
+  updateUserRole:   (id: string, role: string) =>
+    api<User>(`/admin/users/${id}/role`, { method: 'PATCH', body: { role } }),
+  deleteUser:       (id: string)              =>
+    api<{ message: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
+
+  // jobs
+  getJobs:          (params?: { search?: string; status?: string; category?: string }) => {
+		const query = new URLSearchParams(params as any).toString();
+		return api<Job[]>(`/admin/jobs?${query}`);
+	},
+  getJobById:       (id: string)              => api<Job>(`/admin/jobs/${id}`),
+  updateJobStatus:  (id: string, status: string) =>
+    api<Job>(`/admin/jobs/${id}/status`, { method: 'PATCH', body: { status } }),
+  deleteJob:        (id: string)              =>
+    api<{ message: string }>(`/admin/jobs/${id}`, { method: 'DELETE' }),
+
+	// roles
+	getRoles: () => api<RoleConfig[]>('/admin/roles'),
+
+  health: () => api<HealthResponse>('/admin/health'),
 };

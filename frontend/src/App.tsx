@@ -9,12 +9,15 @@ import Register from './pages/auth/Register';
 import Dashboard from './pages/market/Dashboard';
 import Messages from './pages/chat/Messages';
 import Admin from './pages/admin/Admin';
-import ProfileSettingsPage from './pages/settings/profileSettings';
 import Layout from './components/Layout';
 // import Theme from './components/ThemeShowcase';
 // import Navbar from './components/Navbar';
 import { ScrollToTop } from './components/ScrollToTop';
 import { GuestRoute } from './components/GuestRoute';
+import ProfilePage from './pages/profile/ProfilePage';
+import ProfileSettingsPage from './pages/settings/profileSettings';
+import NetworkPage from './pages/network/NetworkPage';
+import { RequireAuth } from './components/RequireAuth';
 
 export default function App() {
   return (
@@ -25,10 +28,10 @@ export default function App() {
         <Route element={<GuestRoute />}>
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
+          <Route path="/" element={<Landing />} />
         </Route>
-
+        
         {/*Public routes*/}
-        <Route path="/" element={<Landing />} />
         {/* <Route path="/auth/sign-in" element={<Login />} />
         <Route path="/auth/sign-up" element={<Register />} /> */}
         <Route path="/about" element={<About />} />
@@ -36,13 +39,25 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
 
         {/*authenticated routes (with shared layout)*/}
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/chat" element={<Messages />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/profile/:username" element={<ProfilePage />} />
+            <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+            <Route path="/network" element={<NetworkPage />} />
+          </Route>
+        </Route>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/freedashboard" element={<Dashboard />} /> {/* just temporary */}
-          <Route path="/chat" element={<Messages />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+          <Route path="/chat" element={<Messages />} />
         </Route>
+				
+				{/*Admin Area*/}
+        <Route path="/admin/*" element={<Admin />} />
       </Routes>
     </>
   );
