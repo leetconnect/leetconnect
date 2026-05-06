@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (data: LoginRequest) => Promise<{ requires2FA: boolean; tempToken?: string; user?: User}>;
-  login2FA: (tempToken: string, code: string) => Promise<{ user: User }>;
-  register: (data: RegisterRequest) => Promise<void>;
+  login2FA: (tempToken: string, code: string) => Promise<{ user: User }>; // added user in return !
+  register: (data: RegisterRequest) => Promise<{ user: User }>; // added user in return !
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
 }
@@ -65,13 +65,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return {user: res.user! }
   };
 
-  const register = async (data: RegisterRequest) => {
+  const register = async (data: RegisterRequest) : Promise<{user: User;}>=> {
     const res = await api<{ accessToken: string, user: User }>('/auth/register', {
       method: 'POST',
       body: data
     });
     setAccessToken(res.accessToken);
     setUser(res.user);
+    return {user: res.user};
   };
 
   const logout = async () => {
