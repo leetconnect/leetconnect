@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect} from 'react';
 import { api, setAccessToken, userApi, type User } from '../lib/api';
 
 type SkillsState = {
@@ -28,7 +28,7 @@ type Job = {
   category: string;
   skills: string[];
   status: "OPEN" | "CLOSED" | string;
-
+  proposals : Proposal[];
   clientId: string;
 
   client: Client | null;

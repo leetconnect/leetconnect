@@ -34,10 +34,10 @@ const FreelancerSetupPage = () => {
   useEffect(() => {
     if (!loading && user) {
       const isComplete =
-        user.categorie?.length > 0 &&
+        user.category?.length > 0 &&
         user.skills?.length > 0 &&
         user.bio &&
-        user.photo;
+        user.avatar;
 
       if (isComplete) {
         navigate("/freedashboard");
@@ -162,7 +162,7 @@ const FreelancerSetupPage = () => {
             accept="image/*"
             className="hidden"
             onChange={(e) =>
-              e.target.files && handleImageChange(e.target.files[0])
+              e.target.files && handleImageChange(e.target.files?[0])
             }
           />
 
