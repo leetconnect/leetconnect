@@ -132,15 +132,16 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   avatar: 'avatar',
   isOnline: 'isOnline',
-  skills: 'skills',
-  rating: 'rating',
-  category: 'category',
   twoFASecret: 'twoFASecret',
   twoFAEnabled: 'twoFAEnabled',
   oauthProvider: 'oauthProvider',
   oauthId: 'oauthId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  bio: 'bio',
+  location: 'location',
+  website: 'website',
+  title: 'title'
 };
 
 exports.Prisma.RefreshTokenScalarFieldEnum = {

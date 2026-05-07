@@ -6,6 +6,7 @@ import { useAuth } from '@/context/userContext';
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Eye, EyeOff } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -109,16 +110,22 @@ export default function Register() {
 
         setLoading(true);
         try {
-            // call backend API for register and update auth context
+            
+            // call bac
+            // kend API for register and update auth context
             await registerUser(formData);
-            console.log('wa Userrrrrrr->', user)
+              
             // Navigate to dashboard
-            if(user?.type === 'FREELANCER'){
-                console.log('ppppppppppppppppppppppp')
+            const userData = await api<User>('/auth/me');
+            
+            if(userData?.type === 'FREELANCER'){
+        
                 navigate('/freelancerpage')
                 return;
+            }else{
+                 navigate('/dashboard');
             }
-            // navigate('/dashboard');
+           
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {
@@ -126,6 +133,7 @@ export default function Register() {
         }
     };
 
+    
     const handleGoogleSignUp = () => {
         // TODO: Implement Google OAuth flow
         console.log('Google sign-up not yet implemented');
@@ -139,7 +147,7 @@ export default function Register() {
                     <CardHeader className="space-y-2 text-center">
                         <CardTitle className="text-2xl font-semibold">Create your account</CardTitle>
                         <CardDescription>
-                            Start your {formData.type === 'FREELANCER' ? 'freelancing' : 'hiring'} journey in seconds, no credit card required.
+                            Start your {formData.type === 'FREELANCER' ? 'freelancing' : 'hiring'} journey in seconds.
                         </CardDescription>
                     </CardHeader>
 
@@ -184,7 +192,7 @@ export default function Register() {
                                     onClick={() => setFormData({ ...formData, type: r })}
                                     className={`
                                 relative z-10 flex-1 py-2 px-3 rounded-md text-sm font-medium
-                                transition-colors duration-200
+                                transition-colors duration-200 hover:cursor-pointer
                                 ${formData.type === r ? 'text-white' : 'text-foreground-muted hover:text-foreground'}
                             `}
                                 >

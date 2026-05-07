@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients } from '../controllers/auth.controller';
+import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients, SetupProfile} from '../controllers/auth.controller';
 import { registerValidator, loginValidator } from '../validators/auth.validator';
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
 import prisma from '../lib/prisma';
+import {updateProfileValidator, changePasswordValidator} from '../validators/profileValidator'
+import { upload } from '../middlewares/upload';
+import { uploadAvatar } from '../controllers/auth.controller';
+import rateLimit from 'express-rate-limit';
+import * as twoFA from '../controllers/twoFA.controller';
 
 const router = Router();
 
@@ -12,10 +17,11 @@ router.post('/login', loginValidator, validate, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 
-router.get("/users/:id", getUserById);
+
+router.get("/users/:id",  getUserById);
 router.get("/freelancers", getAllFreelancers);
 router.get("/clients", getAllClients);
-
+router.post('/setup', authMiddleware, SetupProfile)
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
@@ -37,7 +43,13 @@ router.get('/me', authMiddleware, async (req, res) => {
         role: true,
         type: true,
         isOnline: true,
+        bio: true,
+        location: true,
+        website: true,
+        title: true,
         createdAt: true,
+        twoFAEnabled: true
+        
       }
     });
 

@@ -6,6 +6,55 @@ const AUTH_SERVICE = process.env.AUTH_SERVICE_URL;
 
 import axios from "axios";
 
+export const pay = async (req: Request, res: Response) => {
+ const { id } = req.params as { id: string };
+
+  const payment = await prisma.payment.update({
+    where: { id },
+    data: { status: "PAID" },
+  });
+
+  return res.json({
+    success: true,
+    payment,
+  });
+};
+
+
+export const getPaymentById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params as { id: string };
+
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: {
+        proposal: {
+          include: {
+            job: true,
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      payment,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 
 const getString = (value: unknown): string | undefined => {
   if (Array.isArray(value)) return value[0];
@@ -188,4 +237,25 @@ export const deleteJob = async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+export const completeJob = async (req: Request, res: Response) => {
+   const { id } = req.params as { id: string };
+
+  const job = await prisma.job.findUnique({ where: { id } });
+
+  if (!job) {
+    return res.status(404).json({ message: "Job not found" });
+  }
+
+  if (job.status !== "IN_PROGRESS") {
+    return res.status(400).json({ message: "Job not in progress" });
+  }
+
+  const updated = await prisma.job.update({
+    where: { id },
+    data: { status: "COMPLETED" },
+  });
+
+  return res.json({ success: true, job: updated });
 };

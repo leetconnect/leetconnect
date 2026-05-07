@@ -61,29 +61,51 @@ export const getJobProposals = async (req: Request, res: Response) => {
 };
 
 export const acceptProposal = async (req: Request, res: Response) => {
-  try {
-    const id = getString(req.params.id);
+  const { id } = req.params as { id: string };
 
-    if (!id) {
-      return res.status(400).json({ success: false, message: "Invalid id" });
-    }
+  const proposal = await prisma.proposal.findUnique({
+    where: { id },
+    include: {
+      job: true,
+    },
+  });
 
-    const proposal = await prisma.proposal.update({
-      where: { id },
-      data: { status: "ACCEPTED" },
-    });
-
-    await prisma.job.update({
-      where: { id: proposal.jobId },
-      data: { status: "IN_PROGRESS" },
-    });
-
-    return res.json({ success: true, proposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  if (!proposal) {
+    return res.status(404).json({ message: "Proposal not found" });
   }
-};
 
+
+  await prisma.proposal.update({
+    where: { id },
+    data: { status: "ACCEPTED" },
+  });
+
+
+  const payment = await prisma.payment.create({
+    data: {
+      proposalId: proposal.id,
+      jobId: proposal.jobId,
+
+      clientId: proposal.job.clientId, 
+      freelancerId: proposal.freelancerId,
+
+      amount: proposal.proposedBudget, 
+
+      status: "PENDING",
+    },
+  });
+
+  // update job
+  await prisma.job.update({
+    where: { id: proposal.jobId },
+    data: { status: "IN_PROGRESS" },
+  });
+
+  return res.json({
+    success: true,
+    payment,
+  });
+};
 export const rejectProposal = async (req: Request, res: Response) => {
   try {
     const id = getString(req.params.id);

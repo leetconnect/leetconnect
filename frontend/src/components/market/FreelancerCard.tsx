@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { DollarSign, Star } from "lucide-react";
+import React from "react";
+import { Star } from "lucide-react";
 
 type Freelancer = {
   name: string;
+  username?: string;
   title: string;
-  price: number;
+  rate: number;
   avatar: string;
   skills: string[];
+  category: string[];
+  rating?: number;
 };
 
 type Props = {
@@ -14,89 +17,92 @@ type Props = {
 };
 
 const FreelancerCard: React.FC<Props> = ({ freelancer }) => {
-  const [more, setMore] = useState<number>(0);
-  const [skills, setSkills] = useState<string[]>([]);
-
-  const len = freelancer.skills.length - skills.length;
-
-  useEffect(() => {
-    const start = more * 3;
-    const arr = freelancer.skills.slice(start, start + 3);
-    setSkills((prev) => [...prev, ...arr]);
-  }, [more, freelancer.skills]);
+  const visibleSkills = freelancer.skills.slice(0, 6);
+  const remaining = freelancer.skills.length - visibleSkills.length;
 
   return (
     <div className="bg-[#111] rounded-xl p-6 hover:bg-[#151515] transition-all">
 
-     
+      {/* HEADER */}
       <div className="flex justify-between mb-4">
 
         <div className="flex gap-3">
-          <img
-            src={freelancer.avatar}
-            alt={freelancer.name}
-            className="w-12 h-12 rounded-full object-cover"
-          />
+          {freelancer.avatar ? (
+  <img
+    src={freelancer.avatar}
+    alt={freelancer.name}
+    className="w-12 h-12 rounded-full object-cover"
+  />
+) : (
+  <div className="w-12 h-12 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white font-bold">
+    {freelancer.username?.charAt(0).toUpperCase()}
+  </div>
+)}
 
           <div>
             <h2 className="font-semibold text-white">
-              {freelancer.name}
+              {freelancer.username || freelancer.name}
             </h2>
 
             <p className="text-sm text-[#CBD5E1]">
               {freelancer.title}
             </p>
+
+            {/* CATEGORIES */}
+            <p className="text-xs text-gray-400 mt-1">
+              {freelancer.category?.join(" && ")}
+            </p>
           </div>
         </div>
 
-        
+        {/* RATE */}
         <div className="text-right">
-          <div className="flex items-center gap-1 text-[#69B34C] font-bold">
-            <DollarSign size={18} />
-            <span className="text-lg">{freelancer.price}</span>
+          <div className="text-lg text-[#69B34C] font-bold">
+            {freelancer.rate}$
           </div>
 
           <p className="text-xs text-gray-500">PER HOUR</p>
         </div>
       </div>
 
-      
+      {/* RATING */}
       <div className="flex items-center gap-1 mb-3">
-        {new Array(5).fill(0).map((_, index) => (
+        {new Array(5).fill(0).map((_, i) => (
           <Star
-            key={index}
+            key={i}
             size={14}
-            className="text-[#69B34C]"
+            className={
+              i < (freelancer.rating || 5)
+                ? "text-[#69B34C]"
+                : "text-gray-600"
+            }
           />
         ))}
 
         <span className="text-xs text-gray-400 ml-2">
-          5.0 (128 reviews)
+          {(freelancer.rating || 5).toFixed(1)} (reviews)
         </span>
       </div>
 
-      {/* Skills */}
+      {/* SKILLS */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {skills.map((item, index) => (
+        {visibleSkills.map((skill, index) => (
           <span
             key={index}
             className="text-xs bg-[#1A1A1A] text-gray-400 px-2 py-1 rounded"
           >
-            {item}
+            {skill}
           </span>
         ))}
 
-        {freelancer.skills.length !== skills.length && (
-          <span
-            className="text-xs cursor-pointer text-gray-500"
-            onClick={() => setMore((prev) => prev + 1)}
-          >
-            +{len} more
+        {remaining > 0 && (
+          <span className="text-xs text-gray-500">
+            +{remaining} more
           </span>
         )}
       </div>
 
-   
+      {/* BUTTON */}
       <button className="w-full bg-[#1A1A1A] py-2 rounded-lg text-sm hover:bg-[#222] transition">
         View Profile
       </button>

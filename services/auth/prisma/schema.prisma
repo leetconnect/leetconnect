@@ -29,8 +29,9 @@ model User {
 
   skills    String[]
   rating    Float    @default(0)
-  category String?
-
+  category String[]
+  rate      Float?
+  expLevel  String?
   
   // Security & 2FA
   twoFASecret    String?
@@ -47,6 +48,12 @@ model User {
   // Timestamps
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  // for profile settings 
+  bio       String?
+  location  String?
+  website   String?
+  title     String?
   // jobs          Job[]
   // Ensures a unique combination of provider + ID
   @@unique([oauthProvider, oauthId])

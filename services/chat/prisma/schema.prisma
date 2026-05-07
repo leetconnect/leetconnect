@@ -19,9 +19,12 @@ model User {
 
   firstname       String          @default("")
   lastname        String          @default("")
+  bio             String?         @default("")
+  location        String?
+  website         String?
   role            String          @default("USER")
   type            String          @default("CLIENT")
-  avatar          String          @default("/avatars/default.png")
+  avatar          String          @default("")
   isOnline        Boolean         @default(false)
 
   createdAt       DateTime        @default(now())
@@ -94,7 +97,7 @@ model FriendRequest {
   updated_at      DateTime        @updatedAt
 
   sender          User            @relation("SentFriendRequests", fields: [sender_id], references: [id], onDelete: Cascade)
-  receicer        User            @relation("RecvFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
+  receiver        User            @relation("RecvFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
 
   @@index([receiver_id, status])
   @@index([sender_id, status])
