@@ -109,10 +109,15 @@ export default function Register() {
         setLoading(true);
         try {
             // call backend API for register and update auth context
-            await registerUser(formData);
+            const res = await registerUser(formData);
 
             // Navigate to dashboard
-            navigate('/dashboard');
+            // if (res.user?.type == "FREELANCER"){
+            //     navigate('/freedashboard');
+            // } else {
+            //     navigate('/dashboard');
+            // }
+
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {
