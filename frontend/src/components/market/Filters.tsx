@@ -39,7 +39,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
     Max: 0,
   });
 
-  const { setFreelancers, allSkills } = useAuth();
+  const { setFreelancers, allSkills , freelancers} = useAuth();
 
   const ClearFilter = () => {
     setSkills({});
@@ -55,7 +55,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
       return;
     }
 
-    let filterFreelancer: Freelancer[] = [...freelencer];
+    let filterFreelancer: Freelancer[] = [...freelancers];
 
     if (rangeRate.Min && rangeRate.Max) {
       filterFreelancer = filterFreelancer.filter(

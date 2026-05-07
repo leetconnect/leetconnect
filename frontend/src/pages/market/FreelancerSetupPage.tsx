@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { categoriesData } from "../../assets/assets";
 import { useAuth } from "@/context/userContext";
 import { useNavigate } from "react-router-dom";
+import { userApi } from "@/lib/api";
 
 type SkillsState = {
   [key: string]: string[];
@@ -18,129 +19,111 @@ const categories = [
 ];
 
 const FreelancerSetupPage = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, setUser } = useAuth();
   const navigate = useNavigate();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [skills, setSkills] = useState<SkillsState>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [expLevel, setExpLevel] = useState<string>("");
-
-  const [bio, setBio] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [rate, setRate] = useState<number>(0);
 
   useEffect(() => {
     if (!loading && user) {
       const isComplete =
         user.category?.length > 0 &&
-        user.skills?.length > 0 &&
-        user.bio &&
-        user.avatar;
+        user.skills?.length > 0;
 
       if (isComplete) {
         navigate("/freedashboard");
       }
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
-  const ClearFilter = () => {
+  const clearAll = () => {
     setSkills({});
-    setActiveCategory(null);
     setSelectedCategories([]);
-    setPreview(null);
-    setImage(null);
-    setBio("");
+    setActiveCategory(null);
     setRate(0);
     setExpLevel("");
   };
 
-  const handleImageChange = (file: File) => {
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
-  const addOrRemoveSkill = (skill: string | null, categorie: string) => {
+  const toggleSkill = (skill: string, category: string) => {
     setSkills((prev) => {
-      if (Object.keys(prev).includes(categorie) && !skill) {
-        const update = { ...prev };
-        delete update[categorie];
-        return update;
-      }
+      const currentSkills = prev[category] || [];
 
-      if (skill && prev[categorie]) {
-        if (prev[categorie].includes(skill)) {
-          const update = {
-            ...prev,
-            [categorie]: prev[categorie].filter((item) => item !== skill),
-          };
+      if (currentSkills.includes(skill)) {
+        const updated = currentSkills.filter((s) => s !== skill);
 
-          if (update[categorie]?.length === 0) {
-            delete update[categorie];
-          }
-
-          return update;
+        if (updated.length === 0) {
+          const copy = { ...prev };
+          delete copy[category];
+          return copy;
         }
 
         return {
           ...prev,
-          [categorie]: [...prev[categorie], skill],
+          [category]: updated,
         };
-      }
-
-      if (!skill) {
-        return { ...prev, [categorie]: [] };
       }
 
       return {
         ...prev,
-        [categorie]: [skill],
+        [category]: [...currentSkills, skill],
       };
     });
   };
 
-  const removeCaterorie = (item: string) => {
-    setActiveCategory(item);
+  const toggleCategory = (category: string) => {
+    setActiveCategory(category);
 
     setSelectedCategories((prev) => {
-      if (prev.includes(item) && item === activeCategory) {
-        addOrRemoveSkill(null as any, item);
-        return prev.filter((elem) => elem !== item);
+      if (prev.includes(category)) {
+        const copy = { ...skills };
+        delete copy[category];
+        setSkills(copy);
+
+        return prev.filter((c) => c !== category);
       }
 
-      if (prev.includes(item)) {
-        return prev;
-      }
-
-      return [...prev, item];
+      return [...prev, category];
     });
   };
 
   const handleSave = async () => {
-    if (!image) return alert("Upload your photo");
-    if (!bio) return alert("Add your bio");
-    if (!expLevel) return alert("Select experience level");
-    if (selectedCategories.length === 0) return alert("Select category");
-    if (Object.keys(skills).length === 0) return alert("Select skills");
-    if (!rate || rate <= 0) return alert("Set a valid hourly rate");
+    if (!expLevel) {
+      return alert("Select experience level");
+    }
+
+    if (selectedCategories.length === 0) {
+      return alert("Select at least one category");
+    }
+
+    if (Object.keys(skills).length === 0) {
+      return alert("Select your skills");
+    }
+
+    if (!rate || rate <= 0) {
+      return alert("Set your hourly rate");
+    }
 
     try {
-      const formData = new FormData();
+      const allSkills = Object.values(skills).flat();
 
-      formData.append("photo", image);
-      formData.append("bio", bio);
-      formData.append("categorie", JSON.stringify(selectedCategories));
-      formData.append("skills", JSON.stringify(skills));
-      formData.append("rate", rate.toString());
-      formData.append("expLevel", expLevel);
+      const payload = {
+        category: selectedCategories,
+        skills: allSkills,
+        rate,
+        expLevel,
+      };
 
-      await fetch("/api/freelancer/setup", {
-        method: "POST",
-        body: formData,
-      });
+      console.log("payload =>", payload);
 
-      navigate("/dashboard");
+      const res = await userApi.setupProfile(payload);
+      setUser(res.user)
+      console.log("res =>", res);
+
+      navigate("/freedashboard");
     } catch (err) {
       console.error(err);
     }
@@ -149,140 +132,214 @@ const FreelancerSetupPage = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white p-6">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <h1 className="text-2xl font-bold">Complete Your Profile</h1>
+    <div className="min-h-screen bg-[#0B1120] text-white px-4 py-10">
+      <div className="max-w-5xl mx-auto">
 
-        <div>
-          <p className="text-gray-400 mb-2">PROFILE PHOTO</p>
+        {/* HEADER */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold">
+            Complete Your Freelancer Profile
+          </h1>
 
-          <input
-            id="photo-upload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) =>
-              e.target.files && handleImageChange(e.target.files?[0])
-            }
-          />
+          <p className="text-gray-400 mt-2">
+            Choose your categories and skills to start receiving projects.
+          </p>
+        </div>
 
-          <label htmlFor="photo-upload" className="mt-4 cursor-pointer block">
-            {preview ? (
-              <img
-                src={preview}
-                alt="preview"
-                className="w-24 h-24 rounded-full object-cover"
+        {/* MAIN CARD */}
+        <div className="bg-[#111827] border border-gray-800 rounded-3xl p-8 shadow-2xl">
+
+          {/* RATE + EXPERIENCE */}
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
+
+            {/* RATE */}
+            <div>
+              <p className="text-sm text-gray-400 mb-3">
+                HOURLY RATE ($)
+              </p>
+
+              <input
+                type="number"
+                placeholder="Ex: 25"
+                value={rate}
+                onChange={(e) => setRate(Number(e.target.value))}
+                className="
+                  w-full
+                  bg-[#1F2937]
+                  border
+                  border-gray-700
+                  rounded-2xl
+                  px-4
+                  py-4
+                  outline-none
+                  focus:border-green-400
+                  transition
+                "
               />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center text-xl font-bold">
-                {user?.username?.charAt(0)?.toUpperCase()}
+            </div>
+
+            {/* EXPERIENCE */}
+            <div>
+              <p className="text-sm text-gray-400 mb-3">
+                EXPERIENCE LEVEL
+              </p>
+
+              <div className="grid grid-cols-3 gap-3">
+                {["Junior", "Mid", "Senior"].map((level) => (
+                  <button
+                    type="button"
+                    key={level}
+                    onClick={() =>
+                      setExpLevel(
+                        expLevel === level ? "" : level
+                      )
+                    }
+                    className={`
+                      py-4
+                      rounded-2xl
+                      border
+                      transition-all
+                      font-semibold
+
+                      ${
+                        expLevel === level
+                          ? "bg-green-400 text-black border-green-400"
+                          : "bg-[#1F2937] border-gray-700 hover:border-green-400"
+                      }
+                    `}
+                  >
+                    {level}
+                  </button>
+                ))}
               </div>
-            )}
-          </label>
-        </div>
-
-        <div>
-          <p className="text-gray-400 mb-2">HOURLY RATE ($)</p>
-
-          <input
-            type="number"
-            placeholder="Ex: 20"
-            className="w-full bg-[#1a1a1a] p-3 rounded-lg border border-gray-700"
-            value={rate}
-            onChange={(e) => setRate(Number(e.target.value))}
-          />
-        </div>
-
-        <div>
-          <p className="text-gray-400 text-sm mb-3">EXPERIENCE LEVEL</p>
-
-          <div className="flex gap-2">
-            {["Junior", "Mid", "Senior"].map((level) => (
-              <button
-                key={level}
-                className={`flex-1 border rounded-lg py-2 ${
-                  expLevel === level
-                    ? "border-[#69B34C] text-[#69B34C]"
-                    : "border-gray-600"
-                }`}
-                onClick={() =>
-                  setExpLevel(expLevel === level ? "" : level)
-                }
-              >
-                {level}
-              </button>
-            ))}
+            </div>
           </div>
-        </div>
 
-        <div>
-          <p className="text-gray-400 mb-2">BIO</p>
+          {/* CATEGORIES */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                Select Categories
+              </h2>
 
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell clients about yourself..."
-            className="w-full bg-[#1a1a1a] p-3 rounded-lg border border-gray-700"
-            rows={4}
-          />
-        </div>
+              <span className="text-sm text-gray-400">
+                {selectedCategories.length} selected
+              </span>
+            </div>
 
-        <div>
-          <p className="text-gray-400 mb-2">CATEGORIES</p>
-
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => removeCaterorie(cat)}
-                className={`px-4 py-2 rounded-full ${
-                  selectedCategories.includes(cat)
-                    ? "bg-green-400 text-black"
-                    : "border border-gray-600"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {activeCategory && (
-          <div>
-            <p className="text-gray-400 mb-2">SKILLS ({activeCategory})</p>
-
-            <div className="flex flex-wrap gap-2">
-              {categoriesData[activeCategory]?.map((skill: string) => (
+            <div className="flex flex-wrap gap-4">
+              {categories.map((category) => (
                 <button
-                  key={skill}
-                  onClick={() => addOrRemoveSkill(skill, activeCategory)}
-                  className={`px-3 py-1 rounded-full ${
-                    skills[activeCategory]?.includes(skill)
-                      ? "bg-green-400 text-black"
-                      : "border border-gray-600"
-                  }`}
+                  type="button"
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`
+                    px-5
+                    py-3
+                    rounded-2xl
+                    border
+                    font-medium
+                    transition-all
+                    duration-200
+
+                    ${
+                      selectedCategories.includes(category)
+                        ? "bg-green-400 text-black border-green-400 scale-105"
+                        : "bg-[#1F2937] border-gray-700 hover:border-green-400 hover:-translate-y-1"
+                    }
+                  `}
                 >
-                  {skill}
+                  {category}
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        <div className="flex gap-3 mt-6">
-          <button
-            className="flex-1 border border-gray-600 rounded-lg py-2 hover:bg-gray-800 transition"
-            onClick={ClearFilter}
-          >
-            Clear
-          </button>
+          {/* SKILLS */}
+          {activeCategory && (
+            <div className="mb-10">
 
-          <button
-            onClick={handleSave}
-            className="flex-1 bg-green-400 text-black rounded-lg py-2 font-bold hover:bg-green-300 transition"
-          >
-            Finish Setup
-          </button>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">
+                  Skills for {activeCategory}
+                </h2>
+
+                <span className="text-sm text-gray-400">
+                  {skills[activeCategory]?.length || 0} selected
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+
+                {categoriesData[activeCategory]?.map(
+                  (skill: string) => (
+                    <button
+                      type="button"
+                      key={skill}
+                      onClick={() =>
+                        toggleSkill(skill, activeCategory)
+                      }
+                      className={`
+                        px-4
+                        py-2
+                        rounded-xl
+                        text-sm
+                        border
+                        transition-all
+
+                        ${
+                          skills[activeCategory]?.includes(skill)
+                            ? "bg-green-400 text-black border-green-400"
+                            : "bg-[#1F2937] border-gray-700 hover:border-green-400"
+                        }
+                      `}
+                    >
+                      {skill}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <div className="flex gap-4">
+
+            <button
+              type="button"
+              onClick={clearAll}
+              className="
+                flex-1
+                py-4
+                rounded-2xl
+                border
+                border-gray-700
+                bg-[#1F2937]
+                hover:bg-[#293548]
+                transition
+              "
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              className="
+                flex-1
+                py-4
+                rounded-2xl
+                bg-green-400
+                text-black
+                font-bold
+                hover:bg-green-300
+                transition
+              "
+            >
+              Finish Setup
+            </button>
+
+          </div>
         </div>
       </div>
     </div>

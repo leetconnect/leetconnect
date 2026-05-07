@@ -18,6 +18,7 @@ export const USER_TYPES = {
 
 export const AUTH_EVENTS = {
   USER_REGISTERED: 'user.registered',
+  USER_UPDATED: 'user.updated',
 };
 
 // The data sent to other services
@@ -29,6 +30,10 @@ export interface UserRegisteredPayload {
   lastname: string;
   role: string;
   type: string;
+}
+
+export interface UserPresencePayload {
+    id: string;
 }
 
   export const JOB_STATUS = {
@@ -62,6 +67,8 @@ export interface UserRegisteredPayload {
     // USER_REGISTERED: 'user.registered',
     USER_ONLINE: 'user.online',
     USER_OFFLINE: 'user.offline',
+    PRESENCE_RESET: 'presence.reset',
+    NOTIF_CREATE: 'notif.create', 
     JOB_CREATED: 'job.created',
     PROPOSAL_RECEIVED: 'proposal.received',
     CONTRACT_COMPLETED: 'contract.completed',

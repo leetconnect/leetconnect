@@ -28,6 +28,30 @@ enum ProposalStatus {
 }
 
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+
+  amount        Float
+  status        PaymentStatus @default(PENDING)
+
+  proposalId    String        @unique
+  proposal      Proposal      @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  jobId         String
+  clientId      String
+  freelancerId  String
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
 
 model Job {
   id          String      @id @default(uuid())
@@ -55,7 +79,7 @@ model Proposal {
   freelancerId   String
   jobId          String
   job            Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
+  payment        Payment?       @relation()
   createdAt      DateTime        @default(now())
 
   @@unique([freelancerId, jobId])

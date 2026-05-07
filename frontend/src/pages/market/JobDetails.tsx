@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { jobsApi, proposalsApi, userApi } from "@/lib/api";
 import { useAuth } from "@/context/userContext";
 
@@ -35,6 +35,7 @@ const JobDetails: React.FC = () => {
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate()
 
   if (!enriched) {
     return <div>Loading...</div>;
@@ -78,7 +79,7 @@ const JobDetails: React.FC = () => {
   
   const acceptJob = async (proposalId: string) => {
     try {
-      await proposalsApi.acceptProposal(proposalId);
+      const res = await proposalsApi.acceptProposal(proposalId);
 
       setJob((prev) =>
         prev
@@ -92,6 +93,7 @@ const JobDetails: React.FC = () => {
             }
           : prev
       );
+      navigate(`/payment/${res.payment.id}`);
     } catch (err) {
       console.error(err);
     }

@@ -14,6 +14,10 @@ import Layout from './components/Layout';
 // import Navbar from './components/Navbar';
 import { ScrollToTop } from './components/ScrollToTop';
 import { GuestRoute } from './components/GuestRoute';
+import ProfilePage from './pages/profile/ProfilePage';
+import ProfileSettingsPage from './pages/settings/profileSettings';
+import NetworkPage from './pages/network/NetworkPage';
+import { RequireAuth } from './components/RequireAuth';
 import Dashboard from './pages/market/Dashbord';
 import Freelencers from './pages/market/Freelencers';
 import JobDetails from './pages/market/JobDetails';
@@ -21,6 +25,7 @@ import PostJob from './pages/market/PostJob';
 import FreelancerDashboardPage from './pages/market/FreelancerDashboardPage';
 import FreelancerSetupPage from "./pages/market/FreelancerSetupPage";
 import FindClients from './pages/market/FindClients';
+import PaymentPage from './pages/market/PaymentPage';
 
 export default function App() {
   return (
@@ -31,11 +36,11 @@ export default function App() {
         <Route element={<GuestRoute />}>
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
+          <Route path="/" element={<Landing />} />
           <Route path='/freelancerpage' element={<FreelancerSetupPage/>}/>
         </Route>
         
         {/*Public routes*/}
-        <Route path="/" element={<Landing />} />
         {/* <Route path="/auth/sign-in" element={<Login />} />
         <Route path="/auth/sign-up" element={<Register />} /> */}
         <Route path="/about" element={<About />} />
@@ -43,7 +48,8 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
 
         {/*authenticated routes (with shared layout)*/}
-        <Route element={<Layout />}>
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
           <Route path="/dashboard" element={< Dashboard/>} />
           <Route path='/findfreelancer' element={<Freelencers/>} />
           <Route path='/jobs/:id'  element={<JobDetails/>} />
@@ -52,6 +58,11 @@ export default function App() {
           <Route path='/findclient' element={<FindClients/>}/>
           <Route path="/messages" element={<Messages />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path='/freelancerpage'  element={<FreelancerSetupPage/>}/>
+          <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+          <Route path='/payment/:id' element={<PaymentPage/>} />
+          <Route path="/network" element={<NetworkPage />} />
+          </Route>
         </Route>
       </Routes>
     </>
