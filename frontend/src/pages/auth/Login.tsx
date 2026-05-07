@@ -9,7 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login: loginUser, login2FA } = useAuth();
+    const { login: loginUser, login2FA, user } = useAuth();
 
     // is the form currently sending to the server 
     const [loading, setLoading] = useState(false);
@@ -96,7 +96,14 @@ export default function Login() {
                 return;
             }
             // Navigate to dashboard
-            navigate('/dashboard');
+            // console.log("type", result.user?.type);
+            console.log("user-> ", user);
+            // console.log(result.user);
+            // if (result.user?.type == "FREELANCER"){
+            //     navigate('/freedashboard');
+            // } else {
+            //     navigate('/dashboard');
+            // }
 
         } catch (err: any) {
             setError(err.message || 'Failed to sign in. Please try again.');
@@ -117,7 +124,11 @@ export default function Login() {
         setLoading(true);
         try {
             await login2FA(tempToken, twoFACode);
-            navigate('/dashboard');
+            // if (result.user?.type == "FREELANCER"){
+            //     navigate('/freedashboard');
+            // } else {
+            //     navigate('/dashboard');
+            // }
         } catch (err: any) {
             setTwoFAError("Wrong code, please try again.");
         } finally {

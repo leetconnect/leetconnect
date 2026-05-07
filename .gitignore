@@ -59,5 +59,6 @@ userContext.md
 
 migrations/
 *.md
-
+# test scripts
 /security-test.sh
+/rate-limit-test.sh
