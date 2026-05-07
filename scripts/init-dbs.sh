@@ -24,7 +24,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     GRANT ALL PRIVILEGES ON DATABASE market_db TO market_user;
     GRANT ALL PRIVILEGES ON DATABASE chat_db TO chat_user;
     GRANT ALL PRIVILEGES ON DATABASE analytics_db TO analytics_user;
-    GRANT ALL PRIVILEGES ON DATABASE admin_db TO admin_db;
+    GRANT ALL PRIVILEGES ON DATABASE admin_db TO admin_user;
 
     -- Grant schema permissions (required for PostgreSQL 15+)
     \c auth_db
@@ -39,8 +39,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     \c analytics_db
     GRANT ALL ON SCHEMA public TO analytics_user;
 
-		\c admin_db
-    GRANT ALL ON SCHEMA public TO admin_db;
+    \c admin_db
+    GRANT ALL ON SCHEMA public TO admin_user;
 
 EOSQL
 

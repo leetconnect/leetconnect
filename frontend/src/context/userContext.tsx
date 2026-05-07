@@ -3,6 +3,7 @@ import { api, setAccessToken, type LoginRequest, type RegisterRequest, type User
 import { authApi } from '../lib/api';
 import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
 import { Role, Permission } from '@/types';
+import { disconnectSocket } from '@/lib/socket';
 
 interface AuthContextType {
   user: User | null;
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     await api('/auth/logout', { method: 'POST' });
+    disconnectSocket();
     setAccessToken(null);
     setUser(null);
   };

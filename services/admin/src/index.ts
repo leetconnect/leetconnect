@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import usersRoutes from "./routes/users.route"
 import jobsRoutes from "./routes/jobs.route"
 import rolesRoutes from "./routes/roles.route"
+import healthRoutes from "./routes/health"
 import { connectDb, disconnectDb, prisma } from './config/prisma'
 import { Server } from "http"
 import { authMiddleware, subscribeToEvents, AUTH_EVENTS, initEventBus } from '@leetconnect/shared';
@@ -17,6 +18,10 @@ const PORT = 3005;
 
 // app.use(cors());
 app.use(express.json());
+
+// Register health route before auth middleware so healthchecks don't need a token
+app.use('/api/admin', healthRoutes);
+
 app.use(authMiddleware);
 
 app.use('/api/admin/users', usersRoutes);

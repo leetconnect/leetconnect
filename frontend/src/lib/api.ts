@@ -17,6 +17,8 @@ export const setAccessToken = (token: string | null) => {
     _accessToken = token;
 };
 
+export const getAccessToken = () => _accessToken;
+
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
     method?: HttpMethod;
@@ -249,6 +251,20 @@ interface CreateConversPayload {
     member_ids: string[];
 }
 
+export interface UserProfile {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    avatar: string;
+    isOnline: boolean;
+    type: 'CLIENT' | 'FREELANCER';
+    bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    createdAt: string;
+}
+
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
 	listConversations: () =>
@@ -297,8 +313,23 @@ export const chatApi = {
                 member_ids: data.member_ids,
             },
         }),
+
+	addMember: (convers_id: number, user_id: string) =>
+		api<{
+            user_id: string;
+            user: {
+                username: string;
+                avatar: string;
+                isOnline: boolean
+            }}>(
+			`/chat/convers/${convers_id}/members`,
+			{ method: 'POST', body: { user_id } },
+		),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
+    
+	// ---------------------- Users ----------------------
+    getUser: (username: string) => api<UserProfile>(`/chat/users/${username}`),
 };
 
 export interface FriendRequest {
@@ -337,11 +368,6 @@ export const friendApi = {
             method: 'PATCH'
         }),
 
-    cancelRequest: (request_id: number) =>
-        api<void>(`/friend/requests/${request_id}`, {
-            method: 'DELETE'
-        }),
-
     listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
     listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
     listFriends: () => api<Friend[]>('/friend/requests/friends'),
@@ -351,6 +377,24 @@ export const friendApi = {
             body: {friend_id},
         })
 }
+
+export interface ChatNotif {
+    id: number;
+    user_id: string;
+    type: 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
+    title: string;
+    body: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export const notifApi = {
+    list: (): Promise<ChatNotif[]> => api('/notifs'),
+    markRead: (id: number): Promise<ChatNotif> =>
+        api(`/notifs/${id}/read`, { method: 'PATCH' }),
+    markAllRead: (): Promise<{ message: string }> =>
+        api('/notifs/read-all', { method: 'PATCH' }),
+};
 
 export const analyticsApi = {
     getAnalyticsOverview: () =>
