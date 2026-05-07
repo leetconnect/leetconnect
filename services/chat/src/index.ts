@@ -1,8 +1,7 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
-import http			from 'http';
-// import https			from 'https';
-// import fs				from 'fs';
+import morgan			from 'morgan';
+import http				from 'http';
 import { Server }		from 'socket.io';
 
 import health_routes	from './routes/route.health';
@@ -10,6 +9,7 @@ import convers_routes	from './routes/route.convers';
 import message_routes	from './routes/route.messages';
 import notif_routes		from './routes/route.notifs';
 import friends_routes	from './routes/route.friends';
+import users_routes		from './routes/route.users';
 
 import prisma			from './config/config.database';
 
@@ -22,23 +22,16 @@ import {
 	getMetrics,
 	httpRequestDuration,
 	httpRequestsTotal,
+	EVENTS,
 } from '@leetconnect/shared';
 
 import { authMiddleware } from '@leetconnect/shared';
+import { reset_presence, shutdown_presence } from './lib/presence';
+import {  type NotifEventPayload, notify } from './lib/notify';
 
 dotenv.config({ path: '../../.env', quiet: true});
 
-// console.log(process.env);
-
 const PORT = process.env.CHAT_DB_PORT || 3003;
-
-console.log('>>>>>>>>>', process.env.SSL_KEY_PATH);
-console.log('>>>>>>>>>', process.env.SSL_CERT_PATH);
-
-// const sslOptions = {
-//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-// };
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +40,7 @@ const io = new Server(server, {
 	cors: { origin: '*' },
 });
 
+app.use(morgan('dev'));
 app.use(express.json());
 app.set('io', io);
 
@@ -81,6 +75,7 @@ app.use('/api/chat/convers', 			  convers_routes);
 app.use('/api/chat/convers/:id/messages', message_routes);
 app.use('/api/friend/requests', 		  friends_routes);
 app.use('/api/notifs', 					  notif_routes);
+app.use('/api/chat',					  users_routes);
 
 app.use(error_handler);
 
@@ -90,18 +85,39 @@ start_chat_server();
 async function start_chat_server() {
 	try {
 		initEventBus();
-		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async (channel, message: any) => {
-			const {id, email, username, role} = message.data;
-
-			await prisma.user.upsert({
-				where:  {id: id },
-				update: {email, username, role},
-				create: {id, email, username, role}
-			});
-			console.log(`user synced to chat_db: [${id}](${username})`);
+		subscribeToEvents('user.*', async (channel, message: any) => {
+			const data = message.data;
+			if (channel === AUTH_EVENTS.USER_REGISTERED) {
+				await prisma.user.upsert({
+					where:  {id: data.id },
+					update: {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
+					create: {id: data.id, email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type}
+				});
+			} else if (channel === AUTH_EVENTS.USER_UPDATED) {
+				await prisma.user.update({
+					where: {id: data.id},
+					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio, location: data.location, website: data.website}
+				});
+			} else {
+				return;
+			}
+			console.log(`user synced to chat_db: [${data.id}](${data.username})`);
 		});
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
+		});
+		await reset_presence();
+
+		subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
+			if (channel !== EVENTS.NOTIF_CREATE) return;
+			const data = message.data as NotifEventPayload;
+
+			await notify(io, {
+				user_id: data.user_id,
+				type:	 data.type,
+				title:	 data.title,
+				...(data.body != null && { body: data.body }),
+			});
 		});
 		server.listen(PORT, () => {
 			console.log(`chat server running on port: ${PORT}`);
@@ -114,6 +130,7 @@ async function start_chat_server() {
 
 async function server_exit() {
 	console.log('\nshutting down chat server');
+	await shutdown_presence();
 	io.close(); 
 	await prisma.$disconnect();
 	console.log('disconnected from database.');
@@ -121,3 +138,4 @@ async function server_exit() {
 }
 
 process.on('SIGINT', server_exit);
+process.on('SIGTERM', server_exit);
