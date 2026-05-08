@@ -56,14 +56,16 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(authMiddleware);
 
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
   res.send(await getMetrics());
 });
-// routes
+// routes (health must be before auth middleware)
 app.use('/api/analytics', healthRoutes);
+
+app.use(authMiddleware);
+
 app.use('/api/admin/analytics', analyticsRoutes);
 
 // error handler (must be after all routes)
