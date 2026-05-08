@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, setAccessToken, type LoginRequest, type RegisterRequest, type User } from '../lib/api';
 import { authApi } from '../lib/api';
-import { disconnectSocket } from '@/lib/socket';
 import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
 import { Role, Permission } from '@/types';
+import { disconnectSocket } from '@/lib/socket';
 
 interface AuthContextType {
   user: User | null;
