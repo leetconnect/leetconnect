@@ -45,8 +45,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
-     const res = await api<{ 
-      token?: string;
+     const res = await api<{
+      accessToken?: string;
       user?: User;
       requires2FA?: boolean;
       tempToken?: string;
@@ -56,17 +56,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (res.requires2FA) {
       return { requires2FA: true, tempToken: res.tempToken as string};
     }
-    
+
     // normal login
-    setAccessToken(res.token!);
+    setAccessToken(res.accessToken!);
     setUser(res.user!);
-   
+
     return { requires2FA: false, user: res.user!};
   };
 
   const login2FA = async (tempToken: string, code: string): Promise<{user: User;}> => {
     const res = await authApi.login2FA(tempToken, code);
-    setAccessToken(res.token);
+    setAccessToken(res.accessToken);
     setUser(res.user!);
     return {user: res.user! }
   };
