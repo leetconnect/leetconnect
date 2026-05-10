@@ -110,22 +110,17 @@ export default function Register() {
 
         setLoading(true);
         try {
-            
-            // call bac
-            // kend API for register and update auth context
+            // call backend API for register and update auth context
             await registerUser(formData);
-              
+
             // Navigate to dashboard
-            const userData = await api<User>('/auth/me');
-            
-            if(userData?.type === 'FREELANCER'){
-        
-                navigate('/market/dashboard')
-                return;
-            }else{
-                 navigate('/dashboard');
-            }
-           
+            // if (res.user?.type == "FREELANCER"){
+            //     navigate('/freedashboard');
+            // } else {
+            //     navigate('/dashboard');
+            // }
+            navigate('/dashboard');
+
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {

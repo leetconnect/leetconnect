@@ -23,8 +23,9 @@ export interface JwtPayload { // put the least user info data => Least Privilege
 // declaration merging
 declare global {
   namespace Express {
+    interface User extends JwtPayload {}
     interface Request {
-      user?: JwtPayload;
+      user?: User;
     }
   }
 }
