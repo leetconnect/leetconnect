@@ -4,7 +4,7 @@ import { registerValidator, loginValidator } from '../validators/auth.validator'
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
 import prisma from '../lib/prisma';
-import {updateProfileValidator, changePasswordValidator} from '../validators/profileValidator'
+import {updateProfileValidator, changePasswordValidator, setupProfileValidator} from '../validators/profileValidator'
 import { upload } from '../middlewares/upload';
 import { uploadAvatar } from '../controllers/auth.controller';
 import { rateLimit , ipKeyGenerator} from 'express-rate-limit';
@@ -26,7 +26,7 @@ router.post('/logout', logout);
 router.get("/users/:id",  authMiddleware, getUserById);
 router.get("/freelancers",authMiddleware,  getAllFreelancers);
 router.get("/clients",authMiddleware, getAllClients);
-router.post('/setup', authMiddleware, SetupProfile)
+router.post('/setup', authMiddleware,setupProfileValidator, SetupProfile)
 router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile);
 // rate limit for changing password
 const changePasswordLimit = rateLimit({

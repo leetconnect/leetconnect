@@ -61,3 +61,7 @@ export const changePasswordValidator = [
         .matches(/[0-9]/).withMessage('Password must contain at least one number')
         .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character'),
 ];
+
+export const setupProfileValidator = [
+    rejectIfSus('bio', 300, 'Bio'),
+];

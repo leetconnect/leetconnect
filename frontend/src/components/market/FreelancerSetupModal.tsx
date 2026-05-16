@@ -220,17 +220,22 @@ export default function FreelancerSetupModal() {
             )}
           </div>
 
-          {/* Bio */}
-          <div className="space-y-2">
-            <Label htmlFor="bio">Professional Bio</Label>
-            <Textarea
-              id="bio"
-              rows={3}
-              placeholder="Briefly describe your expertise..."
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-            />
-          </div>
+            {/* Bio */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bio">Professional Bio</Label>
+                <span className={`text-xs ${formData.bio.length >= 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {formData.bio.length}/300
+                </span>
+              </div>
+              <Textarea
+                id="bio"
+                rows={3}
+                placeholder="Briefly describe your expertise..."
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, 300) })}
+              />
+            </div>
 
           {/* Actions */}
           <div className="pt-2">
