@@ -236,9 +236,7 @@ Grafana is configured with Prometheus as its datasource.
 - ...
 
 ## Analytics and admin: `abmahfou`
-### Modules:
-* **Major**: Advanced permissions system
-* **Major**:  Advanced analytics dashboard with data visualization
+
 ### What this work includes
 
 #### 1. Role-Based Access Control (RBAC) System
@@ -318,7 +316,8 @@ Designed and implemented a complete permission system from scratch covering both
 ## Modules
 
 ### Major modules
-- ...
+* **Advanced permissions system**
+* **Advanced analytics dashboard with data visualization**
 ### Minor modules
 - ...
 
@@ -342,5 +341,5 @@ Designed and implemented a complete permission system from scratch covering both
 ### Chat References
 - ...
 ### Analytics References
-- [recharts guide](https://recharts.github.io/en-US/guide/getting-started/)
-- [papaparse docs](https://www.papaparse.com/docs)
+- [Recharts Guide](https://recharts.github.io/en-US/guide/getting-started/)
+- [Papaparse Docs](https://www.papaparse.com/docs)
