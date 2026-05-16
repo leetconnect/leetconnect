@@ -339,6 +339,8 @@ export const getAllFreelancers = async (_req: Request, res: Response) => {
     const freelancers = await prisma.user.findMany({
       where: {
         type: "FREELANCER",
+        status: "active",
+        role: "USER",
       },
       orderBy: [
         { rating: "desc" },
